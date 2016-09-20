@@ -74,14 +74,16 @@ def new_fold(time, dt, period, num_div, plot_check=False):
 		print('WARNING: Period cannot be smaller than bin size (dt)')
 
 	# Length light-curve
-	# N represents the columns in the waterfall and also the number of eigenvalues
+	# N represents the columns in the waterfall
 	Nint = round(period / dt) # It has to be chosen the int value over the approximation.
 	dt = period / Nint # dt recalculated so it becomes an interger for given period
 	
+	print('Nint = ' + str(Nint))
+
 	# Period division in Nint*dt. Bin array
 	# arange isn't used, it ins't precise! 
 	# period_div_dt = np.arange(0, period + dt, dt) # Difference with matlab 0:dt:period;
-	period_div_dt = np.linspace(0, period, Nint + 1, endpoint=False) # Recheck this point!
+	period_div_dt = np.linspace(0, period, Nint, endpoint=True) # Recheck this point!
 
 	# number of samples that will be considered for each row of the waterfall
 	num_samples = np.floor(len(time) / num_div)
@@ -143,17 +145,21 @@ def fast_pca(waterfall, plot_check=False):
 	std = np.std(waterfall, axis=1, ddof=1).reshape(M, 1) # carful, different in matlab!
 
 	# normalization waterfall matrix to mean=0 and std=1
-	norm = (waterfall - mean) #/ std
+	norm = (waterfall - mean) / std
 	# Covariance matrix
-	cov = np.cov(norm.T)
+	#cov = np.cov(norm.T)
+	cov = 1 / (N - 1) * np.dot(norm,norm.T)
 
 	# Eigenvalue, Eigenvector
 	V, PC = np.linalg.eig(cov)
 
+	print('Eigenvalues = ' + str(V))
+
 	V_sorted = np.sort(V.real)[::-1] # Eigenvalue
 	j_indices = np.argsort(V.real)[::-1]
 	PC_sorted = PC[:, j_indices] # Eigenvector or PCs
-	#signals = np.dot(PC_sorted.T, norm) # Information matrix, not clear
+
+	signals = np.dot(PC_sorted.T, norm) # Information matrix, not clear
 
 	# Plot to visualize the PCs
 	if plot_check:
@@ -191,9 +197,7 @@ def fast_pca(waterfall, plot_check=False):
 
 		plt.show()
 
-	# A method to select the PCA must be added here!
-
-	return V_sorted.tolist(), PC_sorted.tolist(), cov, norm, #signals
+	return V_sorted.tolist(), PC_sorted.tolist(), cov, norm, signals
 
 def delta_finder(period, iterations, delta, time, dt, num_div):
 
@@ -206,9 +210,9 @@ def delta_finder(period, iterations, delta, time, dt, num_div):
 
 	for i in range(0, iterations):
 		waterfall = new_fold(time, dt, period_iter, num_div)[1]
-		eigenvalues, eigenvectors, _, _ = fast_pca(waterfall)
+		eigenvalues, eigenvectors, _, _, _ = fast_pca(waterfall)
 
-		print(np.array(eigenvalues).shape)
+		print('Eigen values shape = ' + str(np.array(eigenvalues).shape))
 
 		# Stores only the first PC for method1
 		variance.append(eigenvalues[0])
@@ -222,8 +226,6 @@ def delta_finder(period, iterations, delta, time, dt, num_div):
 	# Optimum selection, which will correspond to the maximum
 	max_index = np.argmax(variance)
 	period_final = period + (max_index - iterations / 2) * delta
-	
-	print(np.array(eigenvalues_all).shape)
 
 	return period_final, variance, eigenvalues_all, eigenvectors_all
 
@@ -263,11 +265,23 @@ def find_period(time, period, dt, num_div, iter1, delta1, iter2, delta2, noisy_s
 	[eigenvalues_all1, eigenvalues_all2], [eigenvectors_all1, eigenvectors_all2]
 
 
+
+
+
+
+
 # import scipy.io as sio
 # path = '/Users/tomascassanelli/Dropbox/PCA.A&A/Verroi/MATLAB/'
 # file_name = 'rmr0'
 # matlab_file = sio.loadmat(path + file_name + '.mat')
 # time = matlab_file['time']
-# period_final, variance, eigenvalues_all, eigenvectors_all = delta_finder(0.089367, 10, 1e-7, time, 0.004, 20)
+# dt = 0.004
+# period = 0.089367
+# num_div = 20
 
-
+# Per, Var, _, _ = find_period(time, period, dt, num_div, 100, 1e-7, 1000, 1e-9, noisy_signal=True)
+# print(Per)
+# plt.plot(Var[1])
+# plt.grid
+# plt.show()
+	
