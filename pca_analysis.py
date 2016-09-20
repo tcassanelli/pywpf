@@ -2,6 +2,8 @@ from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
 
+# FPRINCIPAL FUNCTIONS FOR THE PCA FOLDING
+# AUTHOR: TOMAS CASSANELLI
 
 def nextpow2(n):
     m_f = np.log2(n)
@@ -77,8 +79,6 @@ def new_fold(time, dt, period, num_div, plot_check=False):
 	# N represents the columns in the waterfall
 	Nint = round(period / dt) # It has to be chosen the int value over the approximation.
 	dt = period / Nint # dt recalculated so it becomes an interger for given period
-	
-	print('Nint = ' + str(Nint))
 
 	# Period division in Nint*dt. Bin array
 	# arange isn't used, it ins't precise! 
@@ -153,8 +153,6 @@ def fast_pca(waterfall, plot_check=False):
 	# Eigenvalue, Eigenvector
 	V, PC = np.linalg.eig(cov)
 
-	print('Eigenvalues = ' + str(V))
-
 	V_sorted = np.sort(V.real)[::-1] # Eigenvalue
 	j_indices = np.argsort(V.real)[::-1]
 	PC_sorted = PC[:, j_indices] # Eigenvector or PCs
@@ -212,8 +210,6 @@ def delta_finder(period, iterations, delta, time, dt, num_div):
 		waterfall = new_fold(time, dt, period_iter, num_div)[1]
 		eigenvalues, eigenvectors, _, _, _ = fast_pca(waterfall)
 
-		print('Eigen values shape = ' + str(np.array(eigenvalues).shape))
-
 		# Stores only the first PC for method1
 		variance.append(eigenvalues[0])
 
@@ -263,25 +259,3 @@ def find_period(time, period, dt, num_div, iter1, delta1, iter2, delta2, noisy_s
 
 	return np.array([1/freq, period_start1, period_final1, period_final2]), np.array([variance1, variance2]), \
 	[eigenvalues_all1, eigenvalues_all2], [eigenvectors_all1, eigenvectors_all2]
-
-
-
-
-
-
-
-# import scipy.io as sio
-# path = '/Users/tomascassanelli/Dropbox/PCA.A&A/Verroi/MATLAB/'
-# file_name = 'rmr0'
-# matlab_file = sio.loadmat(path + file_name + '.mat')
-# time = matlab_file['time']
-# dt = 0.004
-# period = 0.089367
-# num_div = 20
-
-# Per, Var, _, _ = find_period(time, period, dt, num_div, 100, 1e-7, 1000, 1e-9, noisy_signal=True)
-# print(Per)
-# plt.plot(Var[1])
-# plt.grid
-# plt.show()
-	
