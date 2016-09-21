@@ -134,10 +134,10 @@ def fast_pca(waterfall, plot_check=False):
 	"""
 	Finds PCs, eigenvalues and signal matrix.
 	waterfall is a MxN matrix. Corresponds to the Waterfall diagram!
-	M: rows, # segments in which the whole adquisition has been divided
-	N: columns, # bins in folding period. Number of eigenvalues
-	norm is the (waterfall - <waterfall>)/var(waterfall)
-	V: eigenvalues cov
+	M: rows, number of segments in which the whole adquisition has been divided
+	N: columns, number of bins in folding period. Number of eigenvalues
+	norm is the (waterfall - <waterfall>)/std(waterfall)
+	V: eigenvalues covariance
 	PC: eigenvector cov. The column PC[:,i] is the eigenvector
 	"""
 	M, N = waterfall.shape # This should be the waterfall matrix
@@ -150,7 +150,8 @@ def fast_pca(waterfall, plot_check=False):
 	#cov = np.cov(norm.T)
 	cov = 1 / (N - 1) * np.dot(norm,norm.T)
 
-	# Eigenvalue, Eigenvector
+	# Eigenvalue, Eigenvector 
+	# PC[:, i] is the eigenvector corresponding to V[i] eigenvalue
 	V, PC = np.linalg.eig(cov)
 
 	V_sorted = np.sort(V.real)[::-1] # Eigenvalue
@@ -201,33 +202,31 @@ def delta_finder(period, iterations, delta, time, dt, num_div):
 
 	# makes an interval from central period, [period - i/2 * delta, period + i/2 * delta]
 	period_iter = period - iterations / 2 * delta
-	variance = []
-	
-	eigenvalues_all = []
-	eigenvectors_all = []
+	variance1 = []
+	variance2 = []
+	variance3 = []
 
 	for i in range(0, iterations):
 		waterfall = new_fold(time, dt, period_iter, num_div)[1]
 		eigenvalues, eigenvectors, _, _, _ = fast_pca(waterfall)
 
-		# Stores only the first PC for method1
-		variance.append(eigenvalues[0])
-
-		# Store all PC and V for other purposes
-		eigenvalues_all.append(eigenvalues)
-		eigenvectors_all.append(eigenvectors)
+		# Stores only the 3 V for method1
+		variance1.append(eigenvalues[0])
+		variance2.append(eigenvalues[1])
+		variance3.append(eigenvalues[2])
 
 		period_iter += delta
 	
 	# Optimum selection, which will correspond to the maximum
-	max_index = np.argmax(variance)
+	max_index = np.argmax(variance1)
 	period_final = period + (max_index - iterations / 2) * delta
 
-	return period_final, variance, eigenvalues_all, eigenvectors_all
+	return period_final, [variance1, variance2, variance3], max_index
 
 def find_period(time, period, dt, num_div, iter1, delta1, iter2, delta2, noisy_signal=False):
 	"""
-	Finds the optimal period using PCA. 
+	Finds the optimal period using PCA.
+	noisy_signal=False means that it will search for the best freq using FFT module
 	"""
 	freq = 1 / period
 
@@ -239,23 +238,17 @@ def find_period(time, period, dt, num_div, iter1, delta1, iter2, delta2, noisy_s
 	# Separation for one or two iterations
 	if iter2 != 0:
 		period_start1 = 1 / freq_start
-		period_final1, variance1, eigenvalues_all1, eigenvectors_all1 = delta_finder(period_start1, \
-			iter1, delta1, time, dt, num_div)
+		period_final1, var_iter1, max_index1 = delta_finder(period_start1, iter1, delta1, time, dt, num_div)
 
 		period_start2 = period_final1
-		period_final2, variance2, eigenvalues_all2, eigenvectors_all2 = delta_finder(period_start2, \
-			iter2, delta2, time, dt, num_div)
+		period_final2, var_iter2, max_index2 = delta_finder(period_start2, iter2, delta2, time, dt, num_div)
 
 	else:
 		period_start1 = 1 / freq_start
-		period_final1, variance1, eigenvalues_all1, eigenvectors_all1 = delta_finder(period_start1, \
-			iter1, delta1, time, dt, num_div)
+		period_final1, var_iter1, max_index1 = delta_finder(period_start1, iter1, delta1, time, dt, num_div)
 
 		period_final2 = 0
-		variance2 = 0
-		eigenvalues_all2 = 0
-		eigenvectors_all2 = 0
+		var_iter2 = 0
+		max_index2 = 0
 
-
-	return np.array([1/freq, period_start1, period_final1, period_final2]), np.array([variance1, variance2]), \
-	[eigenvalues_all1, eigenvalues_all2], [eigenvectors_all1, eigenvectors_all2]
+	return [1/freq, period_start1, period_final1, period_final2], [var_iter1, var_iter2], [max_index1, max_index2]
