@@ -40,6 +40,8 @@ def flat_region_finder(array, n=3):
     idx_final : int
         Index of the position of the maximum point between a plateau of n points. Eventually this is the maximum 
         period position. 
+    max_ : float
+        The maximum number chosen between the three local maximums.
     """
     flat = []
     for i in range(0, len(array) - (n - 1)):
@@ -330,8 +332,9 @@ def delta_finder(period, iterations, delta, time, dt, num_div):
         result of the hyperdimensional unitary vector times the eigenvalues (dot product), then the maximum 
         absolute value per iteration is chosen.
     mstev : numpy.ndarray
-        Maximum scalar times the (selected) eigenvalue. Once the maximum scalar of each iteration is chosen, its 
-        correspondent eigenvalue is selected and then they are multiplied to make the so called merit function.
+        Maximum scalar times the (selected) eigenvalue. It is the merit function selected to choose the right
+        iteration. Represents the maximum scalar un a row (or in one iteration) minus the average of all the rest
+        in the same interation. Then is multiplicated by the associated eigenvalue from the maximum scalar selected.
     max_idx : int
         For each iteration a step is added to the final period, this number of steps selected is the maximum index.
         Notice that the period search starts from (period - iterations / 2 * delta).
@@ -350,45 +353,18 @@ def delta_finder(period, iterations, delta, time, dt, num_div):
         # It is a vector with scalar_to_save = [s0, s1, s2, ...] for the num_div value
         scalar_to_save = np.sum(eigenvectors * unit_vec, axis=0).tolist()
         
-        SCALAR.append(scalar_to_save)
+        SCALAR.append(scalar_to_save) # Both values are in decreasing order
         VARIANCE.append(eigenvalues)
 
         period_iter += delta
 
-    # scalar matrix, SCALAR[:, 0] represents all iteration for the first eigenvalue correspondent to its eigenvector
-    S_array = np.abs(np.array(SCALAR))
-    
-    # Selecting the maximum value for the eigenvector scalar in the eigenvalues position
-    V_array = np.array(VARIANCE)
-
-    # METHOD 13
-    # S_avg = []
-    # for i in range(0, len(S_array[:, 0])):
-    #     row = []
-    #     for j in range(0, len(S_array[0])):
-    #         noise = np.sum(S_array[i]) - S_array[i][j]
-    #         row.append(S_array[i][j] / noise)
-    #     S_snr.append(row)
-    # S_snr_array = np.array(S_snr)
-
-    # V_snr = []
-    # for i in range(0, len(V_array[:, 0])):
-    #     row = []
-    #     for j in range(0, len(V_array[0])):
-    #         noise = np.sum(V_array[i]) - V_array[i][j]
-    #         row.append(V_array[i][j] / noise)
-    #     V_snr.append(row)
-    # V_snr_array = np.array(V_snr)
-
-    # mstev = np.max(S_snr_array * V_snr_array, axis=1)
-    # max_idx = flat_region_finder(mstev.tolist())
-
-    # METHOD 14
+    S_array = np.abs(np.array(SCALAR)) # S_array[:, 0] represents all iteration for the first eigenvector
+    V_array = np.array(VARIANCE) # V_array[:, 0] represents all iteration for the first eigenvalue
 
     # Correspondent eigenvalue to the maximum selected scalar
     V_corr = np.choose(np.argmax(S_array, axis=1), V_array.T)
 
-    S_avg = [] # max minus its average
+    S_avg = [] # max scalar minus its average
     M = len(S_array[0])
     N = len(S_array[:, 0])
     for i in range(0, N):
@@ -396,8 +372,8 @@ def delta_finder(period, iterations, delta, time, dt, num_div):
         S_avg.append(np.max(S_array[i]) - noise / (M - 1))
     S_avg_array = np.array(S_avg)
 
-    # maximum scalar times the associated eigenvalue
-    mstev = S_avg_array * V_corr
+    # (maximum scalar minus average) times the associated eigenvalue
+    mstev = S_avg_array * V_corr # mstev = Maximum Scalar Times EigenValue
     
     max_idx = flat_region_finder(mstev.tolist())[0]
 
@@ -466,21 +442,3 @@ def find_period(time, period, dt, num_div, iter1, delta1, iter2, delta2, noisy_s
 
     return [period, period_start1, period_final1, period_final2], [var_iter1, var_iter2], \
     [scalar_iter1, scalar_iter2], [mstev_iter1, mstev_iter2], [max_index1, max_index2]
-
-
-# DATA EXAMPLE
-# if __name__ == "__main__":
-
-#     time = np.genfromtxt('data_pulsar/rmr0.csv')
-#     dt = 0.002793 # 4 ms, 0.002793 s
-#     period = 0.089367 # s
-
-
-#     bin_data, frequency  = pre_analysis(time, dt, period, plot_check=True)
-
-
-
-
-
-
-
