@@ -10,38 +10,46 @@ from progressbar import ProgressBar
 # pca_run.py runs the functions from pca_analysis and stores them in .csv and .npy formats
 # approx 15 min with num_div = 20
 
-print('Starting pca_run.py')
-print('Loading CSV files ...')
-
 # Initial Parameter list
-path = 'data_pulsar/'
 file_name = 'rmr0'
+method = 'method14'
+test = '62'
 
-# Generation of the data file to use
-time = np.genfromtxt(path + file_name + '.csv')
+# file_names = ['rmr500', 'rmr1600', 'rmr2000', 'rmr2600', 'rmr3000']
+# method = 'method14'
+# tests = ['64', '65', '66', '67', '68']
 
-method = 'method5'
+# for x in range(0, 5):
+#     file_name = file_names[x]
+#     test = tests[x]
 
-# Name of the file created with CSV extension.
-output_name = 'rmr0_test18'
+# Interval to compute the num_div 
+# Number of eigenvalues to save is the minimum interval_to_compute[0]
+interval_to_compute = [7, 8, 9, 10]
 
-dt = 0.004 # 4 ms
+dt = 0.002793 # 4 ms, 0.002793 s
 period_start = 0.089367 # s
-# num_div = 20
 
 iter1 = 100
 delta1 = 1e-7 # 1e-7
 
 # Give zero value to not compute them.
-iter2 = 500 # before 500
-delta2 = 4e-9 # before 4e-9 ns
+iter2 = 400 # before 500, 400
+delta2 = 10e-9 # before 4e-9 ns, 10e-9 s
 
 
-titles = ('BINTIME', 'PERIOD_START', 'NUM_DIV', 'ITER1', 'DELTA1', 'ITER2', 'DELTA2', 'PERIOD_ITER1', \
-	'PERIOD_ITER2', 'MAX_IND1', 'MAX_IND2', 'MAX_VAR1', 'MAX_VAR2')
+print('Starting pca_run.py')
+print('Loading CSV files ...')
 
-# Interval to compute the num_div 
-interval_to_compute = [4, 6, 8, 10, 12, 14, 16, 18, 20]
+# Generation of the data file to use
+path = 'data_pulsar/'
+time = np.genfromtxt(path + file_name + '.csv')
+
+# Name of the file created with CSV extension.
+output_name = file_name + '_test' + test
+path_to_save = file_name + '/' + method + '/'
+
+titles = ('BINTIME', 'PERIOD_START', 'NUM_DIV', 'ITER1', 'DELTA1', 'PERIOD_ITER1', 'ITER2', 'DELTA2', 'PERIOD_ITER2')
 
 # Per = GIVEN, FFT, ITER1, ITER2
 print('Starting iteration of ' + str(len(interval_to_compute)) + ' loops')
@@ -54,10 +62,22 @@ if not os.path.isdir(file_name):
 if not os.path.isdir(file_name + '/' + method):
 	os.makedirs(file_name + '/' + method)
 
-path_to_save = file_name + '/' + method + '/'
-
 # Generation of the dictionaries that will contain the output npy files
-var_files = ['V1_iter1', 'V2_iter1', 'V3_iter1', 'V1_iter2', 'V2_iter2', 'V3_iter2']
+
+var_files_iter1 = []
+var_files_iter2 = []
+for i in range(0, interval_to_compute[0]):
+	var_files_iter1.append('V' + str(i) + '_iter1')
+	var_files_iter2.append('V' + str(i) + '_iter2')
+var_files = var_files_iter1 + var_files_iter2
+
+scalar_files_iter1 = []
+scalar_files_iter2 = []
+for i in range(0, interval_to_compute[0]):
+	scalar_files_iter1.append('S' + str(i) + '_iter1')
+	scalar_files_iter2.append('S' + str(i) + '_iter2')
+scalar_files = scalar_files_iter1 + scalar_files_iter2
+
 variance = {}
 for i in var_files:
 	if os.path.isfile(path_to_save + output_name + '_' + i + '.npy'):
@@ -65,7 +85,6 @@ for i in var_files:
 	else:
 		variance[i] = []
 
-scalar_files = ['S1_iter1', 'S2_iter1', 'S3_iter1', 'S1_iter2', 'S2_iter2', 'S3_iter2']
 scalar = {}
 for i in scalar_files:
 	if os.path.isfile(path_to_save + output_name + '_' + i + '.npy'):
@@ -84,13 +103,12 @@ for i in mstev_files:
 # Being iteration for number of rows in waterfall. Higher num_div higher noise!
 for num_div in interval_to_compute:
 		
-	Per, [var_iter1, var_iter2], [scalar_iter1, scalar_iter2], [mstev_iter1, mstev_iter2], max_index = find_period(time, period_start, \
-		dt, num_div, iter1, delta1, iter2, delta2, noisy_signal=True)
+	Per, [var_iter1, var_iter2], [scalar_iter1, scalar_iter2], [mstev_iter1, mstev_iter2], max_index \
+	 = find_period(time, period_start, dt, num_div, iter1, delta1, iter2, delta2, noisy_signal=True)
 
-	INPUT = [dt, period_start, num_div, iter1, delta1, iter2, delta2]
-	OUTPUT = [Per[2], Per[3], max_index[0], max_index[1], np.max(var_iter1[0]), np.max(var_iter2[0])]
+	# Per = [period, period_start1, period_final1, period_final2]
 
-	TO_SAVE = INPUT + OUTPUT
+	TO_SAVE = [dt, Per[1], num_div, iter1, delta1, Per[2], iter2, delta2, Per[3]]
 
 	if os.path.isfile(path_to_save + output_name + '.csv'):
 		with open(path_to_save + output_name + '.csv', 'a') as outcsv:
@@ -104,11 +122,11 @@ for num_div in interval_to_compute:
 			writer2.writerow(TO_SAVE)
 
 	# iteration in half of the scalar and variables array
-	for i in range(0, 3): 
-		variance[var_files[:3][i]].append(var_iter1[i])
-		variance[var_files[-3:][i]].append(var_iter2[i])
-		scalar[scalar_files[:3][i]].append(scalar_iter1[i])
-		scalar[scalar_files[-3:][i]].append(scalar_iter2[i])
+	for i in range(0, interval_to_compute[0]): 
+		variance[var_files_iter1[i]].append(var_iter1[:, i])
+		variance[var_files_iter2[i]].append(var_iter2[:, i])
+		scalar[scalar_files_iter1[i]].append(scalar_iter1[:, i])
+		scalar[scalar_files_iter2[i]].append(scalar_iter2[:, i])
 
 	mstev['mstev_iter1'].append(mstev_iter1)
 	mstev['mstev_iter2'].append(mstev_iter2)
