@@ -1,6 +1,6 @@
 # PCA Folding Analysis
 ### Author: Tomas Cassanelli
-### Staring date: 16-Sep-2016
+Staring date: 16-Sep-2016
 
 ## Summary
 The purpose of this program is to see the effectivity and efficiency that a PCA folding analysis has compared to the **Epoch Folding**, which is the standard used for pulsar period computations.

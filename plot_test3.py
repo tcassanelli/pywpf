@@ -9,10 +9,10 @@ from matplotlib.lines import Line2D
 from matplotlib.backends.backend_pdf import PdfPages
 
 # Inputs to change the file names, do not forget!
-path = 'rmr2600/method14/'
-test_num = '67'
+path = 'rmr500/method14/'
+test_num = '69'
 method = 'Method 14'
-rmr = 'rmr2600'
+rmr = 'rmr500'
 version = 'v1'
 
 # To plot only 3 scalars and eigevalues.

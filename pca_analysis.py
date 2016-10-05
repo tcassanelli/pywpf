@@ -48,8 +48,9 @@ def flat_region_finder(array, n=3):
     idx = np.argmax(flat) # finding the maximum index
     idx_fine = np.argmax([array[idx], array[idx + 1], array[idx + 2]]) # find the maximum between the n points
     idx_final = idx + idx_fine
+    max_ = np.max([array[idx], array[idx + 1], array[idx + 2]]) 
 
-    return idx_final
+    return idx_final, max_
 
 def pre_analysis(time, dt, period, plot_check=False):
     """
@@ -395,9 +396,10 @@ def delta_finder(period, iterations, delta, time, dt, num_div):
         S_avg.append(np.max(S_array[i]) - noise / (M - 1))
     S_avg_array = np.array(S_avg)
 
+    # maximum scalar times the associated eigenvalue
     mstev = S_avg_array * V_corr
     
-    max_idx = flat_region_finder(mstev.tolist())
+    max_idx = flat_region_finder(mstev.tolist())[0]
 
     period_final = period - iterations / 2 * delta + max_idx * delta
 
