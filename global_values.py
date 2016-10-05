@@ -1,27 +1,18 @@
 # Global Values Computation
 from astropy.io import ascii
 import csv
-import sys
 import os.path
-import time
 import numpy as np
-from scipy import stats
-from pca_analysis import flat_region_finder
-
-def rms(x):
-    return np.sqrt(x.dot(x)/x.size)
-
-def significant(vector):
-    if flat_region_finder(vector)[1] / (np.mean(vector) + rms(vector)) > 1:
-        to_print = 'YES'
-    else:
-        to_print = 'NO'
-    return to_print
+from pca_analysis import flat_region_finder, rms, significant
 
 path = 'rmr3000/method14/'
 file_ = 'rmr3000_test68'
 
 name_ = 'gv_' + file_
+
+# Check if the sub directory is already created
+if not os.path.isdir('glob_var'):
+    os.makedirs('glob_var')
 
 data = ascii.read(path + file_ + '.csv')
 mstev = [np.load(path + file_ + '_mstev_iter1.npy'), np.load(path + file_ + '_mstev_iter2.npy')]
@@ -42,12 +33,12 @@ for iteration in range(0, 2):
         TO_SAVE = [file_, num_div, iteration + 1, bintime, p2, np.mean(merit[k]), rms(merit[k]), \
         flat_region_finder(merit[k])[1], significant(merit[k]), np.max(merit[k])]
 
-        if os.path.isfile(name_ + '.csv'):
-            with open(name_ + '.csv', 'a') as outcsv:
+        if os.path.isfile('glob_var/' + name_ + '.csv'):
+            with open('glob_var/' + name_ + '.csv', 'a') as outcsv:
                 writer2 = csv.writer(outcsv)
                 writer2.writerow(TO_SAVE)
         else:
-            with open(name_ + '.csv', 'a') as outcsv:	
+            with open('glob_var/' + name_ + '.csv', 'a') as outcsv:	
                 writer = csv.DictWriter(outcsv, fieldnames = titles)
                 writer.writeheader()
                 writer2 = csv.writer(outcsv)
