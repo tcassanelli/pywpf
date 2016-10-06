@@ -1,44 +1,9 @@
 from __future__ import division
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 # FPRINCIPAL FUNCTIONS FOR PCA FOLDING
 # AUTHOR: TOMAS CASSANELLI
-
-def rms(x):
-    """
-    Finds the Root Mean Squared (RMS) value from a given vector.
-    
-    Parameters
-    ----------
-    x : numpy.ndarray
-
-    Returns
-    -------
-    rms_ : float
-    
-    """
-    rms_ = np.sqrt(x.dot(x) / x.size)
-    return rms_
-
-def significant(vector):
-    """
-    Checks if a peak inside a one dimentional array is or not significant.
-
-    Parameters
-    ----------
-    vector : numpy.ndarray
-    
-    Returns
-    -------
-    m : str 
-        I will return 'YES' if what was stated is true, else 'NO'.
-    """
-    if flat_region_finder(vector)[1] / (np.mean(vector) + rms(vector)) > 1:
-        to_print = 'YES'
-    else:
-        to_print = 'NO'
-    return to_print
 
 def nextpow2(n):
     """
