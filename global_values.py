@@ -10,7 +10,8 @@ from scipy.stats import kurtosis, skew
 
 def significant(vector):
     """
-    Checks if a peak inside a one dimentional array is or not significant.
+    Checks if a peak inside a one dimentional array is or not significant with respect
+    to the noise.
 
     Parameters
     ----------
@@ -23,20 +24,23 @@ def significant(vector):
     value_ : float
         It is the ratio between the max peak and the rms + mean
     """
-    value_ = (flat_region_finder(vector)[1] - np.mean(vector)) / pstdev(vector)
 
-    if value_ > 1:
-        to_print = 'YES'
-    else:
-        to_print = 'NO'
-    return to_print, value_
+    # Select carefully this values, choose according to plot_test.py
+    pos_i = 40
+    pos_f = 60
+    new_vector = np.hstack((vector[:pos_i], vector[pos_f:]))
+
+    value_ = (flat_region_finder(vector)[1] - np.mean(new_vector)) / pstdev(new_vector)
+
+    return value_, np.mean(new_vector), pstdev(new_vector)
+
 
 rmr = ['rmr0', 'rmr100', 'rmr500', 'rmr1600', 'rmr2000', 'rmr2600', 'rmr3000']
-test = ['62', '63', '64', '65', '66', '67', '68']
+test = ['71', '72', '73', '74', '75', '76', '77']
 
 for i in range(len(rmr)):
 
-    path = rmr[i] + '/method14/'
+    path = rmr[i] + '/'
     file_ = rmr[i] + '_test' + test[i] 
 
     name_ = 'gv_' + file_
@@ -59,11 +63,13 @@ for i in range(len(rmr)):
         for k in range(0, N):
 
             bintime = data['BINTIME'][k]
-            p2 = data['PERIOD_ITER' + str(iteration+1)][k]
+            p2 = data['PERIOD_ITER' + str(iteration+1)][k] # Final period selected
             num_div = data['NUM_DIV'][k]
+            mean = significant(merit[k])[1] # Mean without the peak
+            rms = significant(merit[k])[2] # RMS without the peak
 
-            TO_SAVE = [file_, num_div, iteration + 1, bintime, p2, np.mean(merit[k]), pstdev(merit[k]),\
-            flat_region_finder(merit[k])[1], significant(merit[k])[1], np.max(merit[k]), kurtosis(merit[k]), skew(merit[k])]
+            TO_SAVE = [file_, num_div, iteration + 1, bintime, p2, mean, rms, flat_region_finder(merit[k])[1], \
+            significant(merit[k])[0], np.max(merit[k]), kurtosis(merit[k]), skew(merit[k])]
 
             if os.path.isfile('glob_var/' + name_ + '.csv'):
                 with open('glob_var/' + name_ + '.csv', 'a') as outcsv:

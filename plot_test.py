@@ -2,39 +2,41 @@ from astropy.io import ascii
 import datetime
 import os
 import numpy as np
-
+from noise_to_gauss import gauss, gauss_fit
+from matplotlib import colors
 import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
-
 from matplotlib.backends.backend_pdf import PdfPages
+from progressbar import ProgressBar
 
 # Inputs to change the file names, do not forget!
-path = 'rmr500/method14/'
-test_num = '69'
-method = 'Method 14'
-rmr = 'rmr500'
-version = 'v1'
+rmr = '3000'
+path = 'rmr3000/rmr3000_test77'
+name_output = 'test77_v1'
 
-# To plot only 3 scalars and eigevalues.
-S0_i1 = np.load(path + rmr + '_test' + test_num + '_S0_iter1.npy')
-S1_i1 = np.load(path + rmr + '_test' + test_num + '_S1_iter1.npy')
+# To plot only 2 scalars and 2 eigevalues.
+S0_i1 = np.load(path + '_S0_iter1.npy')
+S1_i1 = np.load(path + '_S1_iter1.npy')
 
-S0_i2 = np.load(path + rmr + '_test' + test_num + '_S0_iter2.npy')
-S1_i2 = np.load(path + rmr + '_test' + test_num + '_S1_iter2.npy')
+S0_i2 = np.load(path + '_S0_iter2.npy')
+S1_i2 = np.load(path + '_S1_iter2.npy')
 
-V0_i1 = np.load(path + rmr + '_test' + test_num + '_V0_iter1.npy')
-V1_i1 = np.load(path + rmr + '_test' + test_num + '_V1_iter1.npy')
+V0_i1 = np.load(path + '_V0_iter1.npy')
+V1_i1 = np.load(path + '_V1_iter1.npy')
 
-V0_i2 = np.load(path + rmr + '_test' + test_num + '_V0_iter2.npy')
-V1_i2 = np.load(path + rmr + '_test' + test_num + '_V1_iter2.npy')
+V0_i2 = np.load(path + '_V0_iter2.npy')
+V1_i2 = np.load(path + '_V1_iter2.npy')
 
-mstev1 = np.load(path + rmr + '_test' + test_num + '_mstev_iter1.npy')
-mstev2 = np.load(path + rmr + '_test' + test_num + '_mstev_iter2.npy')
+mstev1 = np.load(path + '_mstev_iter1.npy')
+mstev2 = np.load(path + '_mstev_iter2.npy')
 
-data = ascii.read(path + rmr + '_test' + test_num + '.csv')
+data = ascii.read(path + '.csv')
 
 
-with PdfPages('plots/test' + str(test_num) + '_' + str(version) + '.pdf') as pdf:
+print('Starting iteration of ' + str(len(data['BINTIME'])) + ' loops')
+progress = ProgressBar()
+print(progress)
+
+with PdfPages('plots/' + name_output + '.pdf') as pdf:
 
 	for k in range(0, len(data['BINTIME'])):
 
@@ -56,10 +58,10 @@ with PdfPages('plots/test' + str(test_num) + '_' + str(version) + '.pdf') as pdf
 		ax1.axvline(x=data['PERIOD_ITER1'][k], color='m', linewidth=1, label='Best Period = ' + \
 			str(data['PERIOD_ITER1'][k]))
 		ax1.grid()
-		ax1.legend(loc='upper left', fontsize=10)
+		ax1.legend(loc='upper right', fontsize=10)
 		ax1.set_xlabel('Time [s]. Iterations = ' + str(data['ITER1'][k]) + ', delta = ' + str(data['DELTA1'][k]))
 		ax1.set_ylabel('Scalar, eigvalue and merit amplitude')
-		ax1.set_title(str(method) + '. ' + str(rmr) + ' Iteration 1. Waterfall rows = ' + \
+		ax1.set_title('Noise ' + rmr + '. Iteration 1. Waterfall rows = ' + \
 			str(data['NUM_DIV'][k]) + '. dt = ' + str(data['BINTIME'][k]) + ' s.')
 		ax1.set_xlim([data['PERIOD_START'][k] - data['DELTA1'][k] * (data['ITER1'][k] + 1) / 2, \
 			data['PERIOD_START'][k] + data['DELTA1'][k] * (data['ITER1'][k] - 1)/2])
@@ -71,6 +73,12 @@ with PdfPages('plots/test' + str(test_num) + '_' + str(version) + '.pdf') as pdf
 		ax2.plot(x_axis_2, V1_i2[k], 'b+-', linewidth=0.8, label='Second eigenvalue', alpha=0.5)
 		ax2.plot(x_axis_2, mstev2[k], 'r.-', linewidth=2.5, label='Merit function 2')
 		ax2.plot(x_axis_1, mstev1[k], 'r.-', linewidth=1, label='Merit function 1')
+
+		# ax2.plot(gauss_fit(x_axis_2, mstev2[k])[0], gauss_fit(x_axis_2, mstev2[k])[1], 'dimgrey', linewidth=3)
+		# ax2.axvline(x=gauss_fit(x_axis_2, mstev2[k])[0][np.argmax(gauss_fit(x_axis_2, mstev2[k])[1])], \
+		# 	color='coral', linewidth=1, label='Gauss Period = ' + \
+		# 	str(gauss_fit(x_axis_2, mstev2[k])[0][np.argmax(gauss_fit(x_axis_2, mstev2[k])[1])]))
+
 		ax2.axvline(x=0.08936715, color='y', linewidth=1, label='Folding Period = 0.08936715')
 		ax2.axvline(x=data['PERIOD_ITER2'][k], color='m', linewidth=1, label='Best Period = ' + \
 			str(data['PERIOD_ITER2'][k]))
@@ -78,12 +86,14 @@ with PdfPages('plots/test' + str(test_num) + '_' + str(version) + '.pdf') as pdf
 		ax2.legend(loc='upper left', fontsize=10)
 		ax2.set_xlabel('Time [s]. Iterations = ' + str(data['ITER2'][k]) + ', delta = ' + str(data['DELTA2'][k]))
 		ax2.set_ylabel('Scalar, eigvalue and merit amplitude')
-		ax2.set_title(str(method) + '. ' + str(rmr) + ' Iteration 2. Waterfall rows = ' + \
+		ax2.set_title('Noise ' + rmr + '. Iteration 2. Waterfall rows = ' + \
 			str(data['NUM_DIV'][k]) + '. dt = ' + str(data['BINTIME'][k]) + ' s.')
 		ax2.set_xlim([data['PERIOD_ITER1'][k] - data['DELTA2'][k] * (data['ITER2'][k] + 1) / 2, \
 			data['PERIOD_ITER1'][k] + data['DELTA2'][k] * (data['ITER2'][k] - 1)/2])
 
 		pdf.savefig()  # saves the current figure into a pdf page
+
+		print(progress + 10 / len(data['BINTIME']))
 
 	plt.close()
 
@@ -93,5 +103,7 @@ with PdfPages('plots/test' + str(test_num) + '_' + str(version) + '.pdf') as pdf
 	d['Keywords'] = 'PCA'
 	d['ModDate'] = datetime.datetime.today()
 
+print('It is done!')
+
 # To open the already stored file
-os.system('open ' + 'plots/test' + str(test_num) + '_' + str(version) + '.pdf')
+os.system('open plots/' + name_output + '.pdf')

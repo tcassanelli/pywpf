@@ -1,9 +1,11 @@
 from __future__ import division
 import numpy as np
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
-# FPRINCIPAL FUNCTIONS FOR PCA FOLDING
+# PRINCIPAL FUNCTIONS FOR PCA FOLDING
 # AUTHOR: TOMAS CASSANELLI
+
+# Collection of all functions that are meant to be used in pca_run.
 
 def nextpow2(n):
     """
@@ -333,7 +335,7 @@ def delta_finder(period, iterations, delta, time, dt, num_div):
         absolute value per iteration is chosen.
     mstev : numpy.ndarray
         Maximum scalar times the (selected) eigenvalue. It is the merit function selected to choose the right
-        iteration. Represents the maximum scalar un a row (or in one iteration) minus the average of all the rest
+        iteration. Represents the maximum scalar in a row (or in one iteration) minus the average of all the rest
         in the same interation. Then is multiplicated by the associated eigenvalue from the maximum scalar selected.
     max_idx : int
         For each iteration a step is added to the final period, this number of steps selected is the maximum index.

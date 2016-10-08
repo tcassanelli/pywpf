@@ -3,7 +3,7 @@
 Staring date: 16-Sep-2016
 
 ## Summary
-The purpose of this program is to see the effectivity and efficiency that a PCA folding analysis has compared to the **Epoch Folding**, which is the standard used for pulsar period computations.
+The purpose of this program is to see the effectivity and efficiency that a PCA folding analysis has compared to the **Epoch Folding**, which is the standard used for pulsar period computations, with observations in the optical regime.
 
 ## Program
 The program is subdivided in two scripts, the first one, `pca_analysis.py`, it has all the functions and calculations and the second one, `pca_run.py`, runs the program and stores the generated matrices or plots in the working directory. Another extention is meant to be build which will be a GUI (soon).
