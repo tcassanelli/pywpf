@@ -24,10 +24,8 @@ The program is subdivided in two scripts, the first one, `pca_analysis`, it has 
 An example from the `pca_run` intial parameter lists. After doing these to plot the results beware that you need to select the correct file names in the `plot_test` program.
 
 ```python
-#################### INITIAL PARAMETERS ####################
-
-file_name = 'NAME HERE'
-output_name = file_name + '_OUTPUT'
+file_name = 'this_is_example' # File that contains the time list
+output_name = file_name + '_output1' # it will be used to name all ascii files
 
 # Number of rows in waterfall for second interation
 interval_to_compute = [3 , 4, 5] # Rows to compute
@@ -35,17 +33,15 @@ interval_to_compute = [3 , 4, 5] # Rows to compute
 dt = 0.002793 # 4 ms, 0.002793 s
 period_start = 0.089367 # Initial period, usualy well known
 
+# Beware of the computing time!
 iter1 = 100
 delta1 = 1e-7 
-
 iter2 = 400 
 delta2 = 10e-9 
 
-noise_signal = True 
 # Change to Flase to search period starting with FFT
 # Use it only when signal is very clean (i.e. Crab Pulsar)
-
-############################################################
+noise_signal = True
 ```
 
 ### Method
