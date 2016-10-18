@@ -21,6 +21,33 @@ The program is subdivided in two scripts, the first one, `pca_analysis`, it has 
 5. `delta1`, `delta2`, are the amount of time added or substracted depending on the iterations. They are of the order of the ns.
 6. The `num_div`, which is in fact the number of how the time array is going to be divided. Also corresponds to the number of rows in the waterfall diagram and to the eigenvalues from the PCA analysis. Please refer to [A Tutorial on Principal Component Analysis](https://arxiv.org/abs/1404.1100) by Jonathon Shlens.
 
+An example from the `pca_run` intial parameter lists. After doing these to plot the results beware that you need to select the correct file names in the `plot_test` program.
+
+```python
+#################### INITIAL PARAMETERS ####################
+
+file_name = 'NAME HERE'
+output_name = file_name + '_OUTPUT'
+
+# Number of rows in waterfall for second interation
+interval_to_compute = [3 , 4, 5] # Rows to compute
+
+dt = 0.002793 # 4 ms, 0.002793 s
+period_start = 0.089367 # Initial period, usualy well known
+
+iter1 = 100
+delta1 = 1e-7 
+
+iter2 = 400 
+delta2 = 10e-9 
+
+noise_signal = True 
+# Change to Flase to search period starting with FFT
+# Use it only when signal is very clean (i.e. Crab Pulsar)
+
+############################################################
+```
+
 ### Method
 To obtain the best period selection, the PCA method is applied. For this, a folding is done to the waterfall diagram, then the covariance matrix is computed, diagonalized and normalized with mean zero and standard deviation 1. The output gives the values for the Principal Component (PC) vectors, **P**, and the eigenvalues, **V**. Depending on the number of rows in the waterfall will be obtained different number of dimensions. The number of dimension it is also number of eigenvalues. For one iteration the result would be,
 
