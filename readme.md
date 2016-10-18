@@ -19,15 +19,18 @@ The program is subdivided in two scripts, the first one, `pca_analysis.py`, it h
 ### Method
 To obtain the best period selection, the PCA method is applied. For this, a folding is done to the waterfall diagram, then the covariance matrix is computed, diagonalized and normalized with mean zero and standard deviation 1. The output gives the values for the Principal Component (PC) vectors, **P**, and the eigenvalues, **V**. Depending on the number of rows in the waterfall will be obtained different number of dimensions. The number of dimension it is also number of eigenvalues. For one iteration the result would be,
 
-![Eigenvector and eigenvalues](https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq1.png=250x)
+![Eigenvector and eigenvalues](https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq1.png =250x)
 
 Where M is the number of dimentions or `num_div`. Another important quantity to find the best period corresponds to the scalar, S. The scalar corresponds to the dot product between the eigenvectors and the hyperdiagonal unitary vector. This is
 
 ![Hyperdiagonal unitary vector](https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq2.png)
 
-![Scalar](https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq3.png)
+Adding for N iterations (`iter1` or `iter2`) to a single matrix for the case of the scalar [**S**] and the eigenvalue [**V**],
 
-This process is done several times depending on the number of iterations (`iter1` or `iter2`), for N  
+![Scalar and eigenvector](https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq3.png)
+
+
+
 
 
 
