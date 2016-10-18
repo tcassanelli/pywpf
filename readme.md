@@ -20,21 +20,34 @@ The program is subdivided in two scripts, the first one, `pca_analysis.py`, it h
 To obtain the best period selection, the PCA method is applied. For this, a folding is done to the waterfall diagram, then the covariance matrix is computed, diagonalized and normalized with mean zero and standard deviation 1. The output gives the values for the Principal Component (PC) vectors, **P**, and the eigenvalues, **V**. Depending on the number of rows in the waterfall will be obtained different number of dimensions. The number of dimension it is also number of eigenvalues. For one iteration the result would be,
 
 <p align="center">
-<img src="https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq1.png" alt="Eigenvector and eigenvalues" width="300">
+<img src="https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq1.png" alt="Eigenvector and eigenvalues" width="400">
 </p>
 
 Where M is the number of dimentions or `num_div`. Another important quantity to find the best period corresponds to the scalar, S. The scalar corresponds to the dot product between the eigenvectors and the hyperdiagonal unitary vector. This is
 
-![Hyperdiagonal unitary vector](https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq2.png)
+<p align="center">
+<img src="https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq2.png" alt="Hyperdiagonal unitary vector" width="400">
+</p>
 
 Adding for N iterations (`iter1` or `iter2`) to a single matrix for the case of the scalar [**S**] and the eigenvalue [**V**],
 
-![Scalar and eigenvector](https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq3.png)
+<p align="center">
+<img src="https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq3.png" alt="Scalar and eigenvector" width="400">
+</p>
 
+The calculation of the merit function, [**M**] or Maximum Scalar Times EigenValue (`mstev`) matrix is done by calculating the maximum scalar in an interation, 
 
+<p align="center">
+<img src="https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq4.png" alt="Maximum scalar per iteration" width="400">
+</p>
 
+then substracting the averga of all the rest scalars in this same iteration with exeption of the maximum chosen. Then this is multiplied but the associated eigenvalue from the maximum scalar selected. In other words this will mean that each element in [**M**] is, 
 
+<p align="center">
+<img src="https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq5.png" alt="mstev function" width="400">
+</p>
 
+Finally as showed in the above equation, the maximum from [**M**].
 
 
 
