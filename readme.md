@@ -32,19 +32,19 @@ Where M is the number of dimentions or `num_div`. Another important quantity to 
 Adding for N iterations (`iter1` or `iter2`) to a single matrix for the case of the scalar [**S**] and the eigenvalue [**V**],
 
 <p align="center">
-<img src="https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq3.png" alt="Scalar and eigenvector" width="500">
+<img src="https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq3.png" alt="Scalar and eigenvector" width="550">
 </p>
 
 The calculation of the merit function, [**M**] or Maximum Scalar Times EigenValue (`mstev`) matrix is done by calculating the maximum scalar in an interation, 
 
 <p align="center">
-<img src="https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq4.png" alt="Maximum scalar per iteration" width="300">
+<img src="https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq4.png" alt="Maximum scalar per iteration" width="250">
 </p>
 
 then substracting the averga of all the rest scalars in this same iteration with exeption of the maximum chosen. Then this is multiplied but the associated eigenvalue from the maximum scalar selected. In other words this will mean that each element in [**M**] is, 
 
 <p align="center">
-<img src="https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq5.png" alt="mstev function" width="500">
+<img src="https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq5.png" alt="mstev function" width="550">
 </p>
 
 Finally as showed in the above equation, the maximum from [**M**].
