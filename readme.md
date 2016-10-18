@@ -2,6 +2,9 @@
 ### Author: Tomas Cassanelli
 Staring date: 16-Sep-2016
 
+Python 3.5.2 :: Anaconda 4.2.0 (x86_64)
+macOS Sierra version 10.12
+
 The present work was developed during the months of September and October 2016 at Università di Padova working with Professor [Giampiero Naletto](http://www.dei.unipd.it/~naletto/).
 
 ## Summary
@@ -43,13 +46,13 @@ The calculation of the merit function, [**M**] or Maximum Scalar Times EigenValu
 <img src="https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq4.png" alt="Maximum scalar per iteration" width="250">
 </p>
 
-then substracting the averga of all the rest scalars in this same iteration with exeption of the maximum chosen. Then this is multiplied but the associated eigenvalue from the maximum scalar selected. In other words this will mean that each element in [**M**] is, 
+then substracting the averga of all the rest scalars in this same iteration with exeption of the maximum chosen. Then this is multiplied but the **associated eigenvalue from the maximum scalar selected**. In other words this will mean that each element in [**M**] is, 
 
 <p align="center">
 <img src="https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq5.png" alt="mstev function" width="550">
 </p>
 
-Finally as showed in the above equation, the maximum from [**M**] will correspond to the parameter to select the best period. This value has associated an especific number of iteration, then this iteration is related to a delta value (it can be `delta1` or `delta2` depending on which loop is it) which will be added to the staring period, `start_period`.
+Please notice that the associated eigenvalue is not the maximum eigenvalue in each iteration, or at least not in general. Finally as showed in the above equation, the maximum from [**M**] will correspond to the parameter to select the best period. This value has associated an especific number of iteration, then this iteration is related to a delta value (it can be `delta1` or `delta2` depending on which loop is it) which will be added to the staring period, `start_period`.
 
 ### Outputs 
 
@@ -59,3 +62,12 @@ The principal outputs of the program will be the second and first periods from t
 2. Eigenvalues, in a `.npy` output format.
 3. Scalars (hyperdiagonal unitary vector times the eigenvector), in a `.npy` output format.
 4. `mstev` (Maximum Scalar Times EigenValue), which is the selected merit function for the analysis. Same output as before, `.npy`.
+
+## Screenshots
+
+From the function `new_fold` is obtained the waterfall diagram
+
+```python
+lc, waterfall = new_fold(time, dt, period, num_div, plot_check=True)
+```
+
