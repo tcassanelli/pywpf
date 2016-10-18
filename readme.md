@@ -21,13 +21,15 @@ To obtain the best period selection, the PCA method is applied. For this, a fold
 
 ![Eigenvector and eigenvalues](https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq1.png)
 
+Where M is the number of dimentions or `num_div`. Another important quantity to find the best period corresponds to the scalar, S. The scalar corresponds to the dot product between the eigenvectors and the hyperdiagonal unitary vector. This is
+
+![Hyperdiagonal unitary vector](https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq2.png)
+
+![Scalar](https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq3.png)
+
+This process is done several times depending on the number of iterations (`iter1` or `iter2`), for N  
 
 
-
-This process is done several times depending on the number of iterations (`iter1` or `iter2`). 
-
-
-Another important quantity to select the best period is the scalar, **S**. This number is the dot product or scalar product between the eigenvectors and the hyperdiagonal unitary vector. 
 
 
 
