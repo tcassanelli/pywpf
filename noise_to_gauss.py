@@ -26,8 +26,8 @@ def gauss(x, amp, mu, sigma):
 def gauss_fit(x, y):
 
     # Typical interval where the peak is located
-    y_ = y[150:255]
-    x_ = x[150:255]
+    y_ = y[130:275]
+    x_ = x[130:275]
 
     # Working with small numbers in the curve_fit package returns problems
     coeff, var_matrix = curve_fit(gauss, np.linspace(0, 100, len(y_)), y_)

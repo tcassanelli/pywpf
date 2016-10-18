@@ -9,9 +9,9 @@ from matplotlib.backends.backend_pdf import PdfPages
 from progressbar import ProgressBar
 
 # Inputs to change the file names, do not forget!
-rmr = '3000'
-path = 'rmr3000/rmr3000_test77'
-name_output = 'test77_v1'
+rmr = '1600'
+path = 'rmr1600/rmr1600_test65'
+name_output = 'test65_v4'
 
 # To plot only 2 scalars and 2 eigevalues.
 S0_i1 = np.load(path + '_S0_iter1.npy')
@@ -74,10 +74,10 @@ with PdfPages('plots/' + name_output + '.pdf') as pdf:
 		ax2.plot(x_axis_2, mstev2[k], 'r.-', linewidth=2.5, label='Merit function 2')
 		ax2.plot(x_axis_1, mstev1[k], 'r.-', linewidth=1, label='Merit function 1')
 
-		# ax2.plot(gauss_fit(x_axis_2, mstev2[k])[0], gauss_fit(x_axis_2, mstev2[k])[1], 'dimgrey', linewidth=3)
-		# ax2.axvline(x=gauss_fit(x_axis_2, mstev2[k])[0][np.argmax(gauss_fit(x_axis_2, mstev2[k])[1])], \
-		# 	color='coral', linewidth=1, label='Gauss Period = ' + \
-		# 	str(gauss_fit(x_axis_2, mstev2[k])[0][np.argmax(gauss_fit(x_axis_2, mstev2[k])[1])]))
+		ax2.plot(gauss_fit(x_axis_2, mstev2[k])[0], gauss_fit(x_axis_2, mstev2[k])[1], 'dimgrey', linewidth=3)
+		ax2.axvline(x=gauss_fit(x_axis_2, mstev2[k])[0][np.argmax(gauss_fit(x_axis_2, mstev2[k])[1])], \
+			color='coral', linewidth=1, label='Gauss Period = ' + \
+			str(gauss_fit(x_axis_2, mstev2[k])[0][np.argmax(gauss_fit(x_axis_2, mstev2[k])[1])]))
 
 		ax2.axvline(x=0.08936715, color='y', linewidth=1, label='Folding Period = 0.08936715')
 		ax2.axvline(x=data['PERIOD_ITER2'][k], color='m', linewidth=1, label='Best Period = ' + \
