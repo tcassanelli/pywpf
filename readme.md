@@ -2,9 +2,8 @@
 ### Author: Tomas Cassanelli
 Staring date: 16-Sep-2016
 
-###### Python 3.5.2 : Anaconda 4.2.0 (x86_64)
-
-###### macOS Sierra version 10.12
+###### Python 3.5.2 : Anaconda 4.2.0 (x86_64).
+###### macOS Sierra version 10.12.
 
 The present work was developed during the months of September and October 2016 at Università di Padova working with Professor [Giampiero Naletto](http://www.dei.unipd.it/~naletto/).
 
