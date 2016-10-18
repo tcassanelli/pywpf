@@ -2,6 +2,8 @@
 ### Author: Tomas Cassanelli
 Staring date: 16-Sep-2016
 
+The present work was developed during the months of September and October 2016 at Università di Padova working with Professor [Giampiero Naletto](http://www.dei.unipd.it/~naletto/).
+
 ## Summary
 The purpose of this program is to see the effectivity and efficiency that a Principal Component Analysis (PCA) folding analysis has compared to the **Epoch Folding**, which is the standard used for pulsar period computations, with observations in the optical regime.
 
@@ -32,7 +34,7 @@ Where M is the number of dimentions or `num_div`. Another important quantity to 
 Adding for N iterations (`iter1` or `iter2`) to a single matrix for the case of the scalar [**S**] and the eigenvalue [**V**],
 
 <p align="center">
-<img src="https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq3.png" alt="Scalar and eigenvector" width="550">
+<img src="https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq3.png" alt="Scalar and eigenvector" width="570">
 </p>
 
 The calculation of the merit function, [**M**] or Maximum Scalar Times EigenValue (`mstev`) matrix is done by calculating the maximum scalar in an interation, 
@@ -47,9 +49,7 @@ then substracting the averga of all the rest scalars in this same iteration with
 <img src="https://github.com/tcassanelli/PCA-Folding/blob/master/images/eq5.png" alt="mstev function" width="550">
 </p>
 
-Finally as showed in the above equation, the maximum from [**M**].
-
-
+Finally as showed in the above equation, the maximum from [**M**] will correspond to the parameter to select the best period. This value has associated an especific number of iteration, then this iteration is related to a delta value (it can be `delta1` or `delta2` depending on which loop is it) which will be added to the staring period, `start_period`.
 
 ### Outputs 
 
@@ -58,4 +58,4 @@ The principal outputs of the program will be the second and first periods from t
 1. `period_final1`, `period_final2`, correspond to the best period found using the method. In an ascii file.
 2. Eigenvalues, in a `.npy` output format.
 3. Scalars (hyperdiagonal unitary vector times the eigenvector), in a `.npy` output format.
-4. MSTEV (Maximum Scalar Times EigenValue), which is the selected merit function for the analysis. Same output as before, `.npy`.
+4. `mstev` (Maximum Scalar Times EigenValue), which is the selected merit function for the analysis. Same output as before, `.npy`.
