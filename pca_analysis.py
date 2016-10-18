@@ -444,3 +444,21 @@ def find_period(time, period, dt, num_div, iter1, delta1, iter2, delta2, noisy_s
 
     return [period, period_start1, period_final1, period_final2], [var_iter1, var_iter2], \
     [scalar_iter1, scalar_iter2], [mstev_iter1, mstev_iter2], [max_index1, max_index2]
+
+if __name__ == '__main__':
+    """
+    Before running the full computation, pca_run, test the program with several iterations
+    see how this behaves with the plots!
+    """
+
+    file_name = 'FILE NAME' # Contains the time array
+
+    dt = 0.002793 # 4 ms, 0.002793 s
+    period_start = 0.089367 # Initial period, usualy well known
+
+    num_div = 20
+
+    time = np.genfromtxt('data_pulsar/' + file_name + '.csv')
+    lc, water = new_fold(time, dt, period_start, num_div, plot_check=True)
+
+    V_sorted, PC_sorted, cov, norm, signals = fast_pca(water, True)

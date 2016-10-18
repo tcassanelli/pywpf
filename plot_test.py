@@ -2,16 +2,18 @@ from astropy.io import ascii
 import datetime
 import os
 import numpy as np
-from noise_to_gauss import gauss, gauss_fit
 from matplotlib import colors
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from progressbar import ProgressBar
 
 # Inputs to change the file names, do not forget!
-rmr = '1600'
-path = 'rmr1600/rmr1600_test65'
-name_output = 'test65_v4'
+rmr = 'FILE_NAME'
+path = 'FILE_NAME/FILE_NAME_output1'
+name_output = 'output1_v1' # plot version
+
+folding = '0.08936715' # Epoch folding period to compare values obtained
+# Find this number in literature otherwise omit it 
 
 # To plot only 2 scalars and 2 eigevalues.
 S0_i1 = np.load(path + '_S0_iter1.npy')
@@ -30,7 +32,6 @@ mstev1 = np.load(path + '_mstev_iter1.npy')
 mstev2 = np.load(path + '_mstev_iter2.npy')
 
 data = ascii.read(path + '.csv')
-
 
 print('Starting iteration of ' + str(len(data['BINTIME'])) + ' loops')
 progress = ProgressBar()
@@ -54,7 +55,7 @@ with PdfPages('plots/' + name_output + '.pdf') as pdf:
 		ax1.plot(x_axis_1, V0_i1[k], 'b+-', linewidth=1, label='First eigenvalue')
 		ax1.plot(x_axis_1, V1_i1[k], 'b+-', linewidth=0.8, label='Second eigenvalue', alpha=0.5)
 		ax1.plot(x_axis_1, mstev1[k], 'r.-', linewidth=2.5, label='Merit function 1')
-		ax1.axvline(x=0.08936715, color='y', linewidth=1, label='Folding Period = 0.08936715')
+		ax1.axvline(x=0.08936715, color='y', linewidth=1, label='Folding Period = ' + folding)
 		ax1.axvline(x=data['PERIOD_ITER1'][k], color='m', linewidth=1, label='Best Period = ' + \
 			str(data['PERIOD_ITER1'][k]))
 		ax1.grid()
@@ -74,12 +75,7 @@ with PdfPages('plots/' + name_output + '.pdf') as pdf:
 		ax2.plot(x_axis_2, mstev2[k], 'r.-', linewidth=2.5, label='Merit function 2')
 		ax2.plot(x_axis_1, mstev1[k], 'r.-', linewidth=1, label='Merit function 1')
 
-		ax2.plot(gauss_fit(x_axis_2, mstev2[k])[0], gauss_fit(x_axis_2, mstev2[k])[1], 'dimgrey', linewidth=3)
-		ax2.axvline(x=gauss_fit(x_axis_2, mstev2[k])[0][np.argmax(gauss_fit(x_axis_2, mstev2[k])[1])], \
-			color='coral', linewidth=1, label='Gauss Period = ' + \
-			str(gauss_fit(x_axis_2, mstev2[k])[0][np.argmax(gauss_fit(x_axis_2, mstev2[k])[1])]))
-
-		ax2.axvline(x=0.08936715, color='y', linewidth=1, label='Folding Period = 0.08936715')
+		ax2.axvline(x=0.08936715, color='y', linewidth=1, label='Folding Period = ' + folding)
 		ax2.axvline(x=data['PERIOD_ITER2'][k], color='m', linewidth=1, label='Best Period = ' + \
 			str(data['PERIOD_ITER2'][k]))
 		ax2.grid()
@@ -105,5 +101,8 @@ with PdfPages('plots/' + name_output + '.pdf') as pdf:
 
 print('It is done!')
 
-# To open the already stored file
-os.system('open plots/' + name_output + '.pdf')
+# To open the already stored file, only for mac!
+try:
+	os.system('open plots/' + name_output + '.pdf')
+except:
+	print('The file is in plots/' + name_output + '.pdf')

@@ -16,21 +16,20 @@ from progressbar import ProgressBar
 
 #################### INITIAL PARAMETERS ####################
 
-file_name = 'rmr0'
-output_name = file_name + '_output62'
+file_name = 'FILE_NAME' # Contains the time array
+output_name = file_name + '_output1'
 
 # Number of rows in waterfall for second interation
-interval_to_compute = [3]
+interval_to_compute = [3, 4, 5]
 
 dt = 0.002793 # 4 ms, 0.002793 s
 period_start = 0.089367 # Initial period, usualy well known
 
 iter1 = 100
-delta1 = 1e-7 # 1e-7
+delta1 = 1e-7
 
-# Give zero value to not compute them.
-iter2 = 400 # before 500, 400
-delta2 = 10e-9 # before 4e-9 ns, 10e-9 s
+iter2 = 400
+delta2 = 10e-9
 
 noise_signal = True 
 # Change to Flase to search period starting with FFT

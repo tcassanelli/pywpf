@@ -24,7 +24,7 @@ The program is subdivided in two scripts, the first one, `pca_analysis`, it has 
 An example from the `pca_run` intial parameter lists. After doing these to plot the results beware that you need to select the correct file names in the `plot_test` program.
 
 ```python
-file_name = 'this_is_example' # File that contains the time list
+file_name = 'FILE_NAME' # Contains the time list
 output_name = file_name + '_output1' # it will be used to name all ascii files
 
 # Number of rows in waterfall for second interation
