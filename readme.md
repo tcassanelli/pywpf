@@ -69,5 +69,12 @@ From the function `new_fold` is obtained the waterfall diagram
 
 ```python
 lc, waterfall = new_fold(time, dt, period, num_div, plot_check=True)
+V_sorted, PC_sorted, cov, norm, signals = fast_pca(water, True)
 ```
+<p align="center">
+<img src="https://github.com/tcassanelli/PCA-Folding/blob/master/images/water.png" alt="mstev function" width="550">
+<img src="https://github.com/tcassanelli/PCA-Folding/blob/master/images/signal.png" alt="mstev function" width="550">
+</p>
+
+
 
