@@ -72,7 +72,7 @@ lc, waterfall = new_fold(time, dt, period, num_div, plot_check=True)
 V_sorted, PC_sorted, cov, norm, signals = fast_pca(water, plot_check=True)
 ```
 <p align="center">
-<img src="https://github.com/tcassanelli/PCA-Folding/blob/master/images/water.png" alt="mstev function" width="250"> <img src="https://github.com/tcassanelli/PCA-Folding/blob/master/images/signals.png" alt="mstev function" width="250">
+<img src="https://github.com/tcassanelli/PCA-Folding/blob/master/images/water.png" alt="mstev function" width="310"> <img src="https://github.com/tcassanelli/PCA-Folding/blob/master/images/signals.png" alt="mstev function" width="300">
 </p>
 
 
