@@ -7,7 +7,6 @@ from matplotlib import colors
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from progressbar import ProgressBar
-from noise_to_gauss import *
 
 # Inputs to change the file names, do not forget!
 rmr = '1600'
