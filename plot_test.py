@@ -75,7 +75,10 @@ with PdfPages('plots/' + name_output + '.pdf') as pdf:
         ax2.plot(x_axis_1, mstev1[k], 'r.-', linewidth=1, label='Merit function 1')
 
         ax2.plot(gauss_fit(x_axis_2, mstev2[k])[0], gauss_fit(x_axis_2, mstev2[k])[1], 'dimgrey', linewidth=3)
-        ax2.axvline(x=gauss_fit(x_axis_2, mstev2[k])[0][np.argmax(gauss_fit(x_axis_2, mstev2[k])[1])], color='coral', linewidth=1, label='Gauss Period = ' + str(gauss_fit(x_axis_2, mstev2[k])[0][np.argmax(gauss_fit(x_axis_2, mstev2[k])[1])]))
+        ax2.axvline(x=gauss_fit(x_axis_2, mstev2[k])[0][np.argmax(gauss_fit(\
+            x_axis_2, mstev2[k])[1])], color='coral', linewidth=1, label=\
+        'Gauss Period = ' + str(gauss_fit(x_axis_2, mstev2[k])[0][np.argmax(\
+            gauss_fit(x_axis_2, mstev2[k])[1])]))
 
         ax2.axvline(x=0.08936715, color='y', linewidth=1, label='Folding Period = 0.08936715')
         ax2.axvline(x=data['PERIOD_ITER2'][k], color='m', linewidth=1, label='Best Period = ' + \
