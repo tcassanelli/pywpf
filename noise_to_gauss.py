@@ -10,7 +10,7 @@ from astropy.io import ascii
 def gauss(x, amp, mu, sigma):
     """
     Evaluate Gaussian.
-    
+
     Parameters
     ----------
     A : float
@@ -23,6 +23,7 @@ def gauss(x, amp, mu, sigma):
     """
     return amp * np.exp(-(x - mu)**2 / (2 * sigma**2))
 
+
 def gauss_fit(x, y):
 
     # Typical interval where the peak is located
@@ -33,6 +34,7 @@ def gauss_fit(x, y):
     coeff, var_matrix = curve_fit(gauss, np.linspace(0, 100, len(y_)), y_)
 
     return x_, gauss(np.linspace(0, 100, len(y_)), *coeff)
+
 
 if __name__ == "__main__":
 
@@ -59,7 +61,4 @@ if __name__ == "__main__":
     ax.grid()
     ax.plot(x, y, 'bo')
     ax.plot(gauss_fit(x, y)[0], gauss_fit(x, y)[1], linewidth=2, c='r')
-
     plt.show()
-
-
