@@ -14,20 +14,22 @@ def nextpow2(n):
 
     Parameters
     ----------
-    n : int
+    n : `int`
 
     Returns
     -------
-    m : int
+    m : `int`
         Exponent of next higher power of 2.
     """
+
     m_f = np.log2(n)
     m_i = np.ceil(m_f)
     m = int(np.log2(2 ** m_i))
+
     return m
 
 
-def flat_region_finder(array, n=3):
+def flat_region_finder(X, n=3):
     """
     To find the best location for the period a fine search has to be done, not
     only where the maximum is located but also where there is a plateau of
@@ -35,34 +37,31 @@ def flat_region_finder(array, n=3):
 
     Parameters
     ----------
-    array : numpy.ndarray
+    X : `~numpy.ndarray`
         Array to find maximum region, it is in the particular case the mstev (
         maximum to scalar eigenvalue).
-    n : int
+    n : `int`
         Number of division that the plateau has to have, for observed data 3
         is more or less correct.
 
     Returns
     -------
-    idx_final : int
+    idx_final : `int`
         Index of the position of the maximum point between a plateau of n
         points. Eventually this is the maximum
         period position.
-    max_ : float
+    maximum : `float`
         The maximum number chosen between the three local maximums.
     """
-    flat = []
-    for i in range(0, len(array) - (n - 1)):
-        flat.append(array[i] + array[i + 1] + array[i + 2])
 
-    idx = np.argmax(flat)  # finding the maximum index
+    flat_region = [sum(X[i:i + n]) for i in range(X.size - n + 1)]
+
+    idx = np.argmax(flat_region)  # finding the maximum index
 
     # find the maximum between the n points
-    idx_fine = np.argmax([array[idx], array[idx + 1], array[idx + 2]])
-    idx_final = idx + idx_fine
-    max_ = np.max([array[idx], array[idx + 1], array[idx + 2]])
+    idx_max = idx + np.argmax([X[idx], X[idx + 1], X[idx + 2]])
 
-    return idx_final, max_
+    return idx_max
 
 
 def pre_analysis(time, dt, period, plot_check=False):
@@ -71,7 +70,7 @@ def pre_analysis(time, dt, period, plot_check=False):
 
     Parameters
     ----------
-    time : numpy.ndarray or list
+    time : `~numpy.ndarray` or list
         Observed periodicity time with the telescope.
     dt : float
         Bintime.
@@ -82,7 +81,7 @@ def pre_analysis(time, dt, period, plot_check=False):
 
     Returns
     -------
-    bin_data : numpy.ndarray
+    bin_data : `~numpy.ndarray`
         Return the bin edges (length(hist)+1) from the computed histogram of a
         set of data time.
     frquency: float
@@ -92,7 +91,7 @@ def pre_analysis(time, dt, period, plot_check=False):
     freq_start = 1 / period
 
     # Setting the x axis for histogram, represents the time discrete position
-    time_axis = np.arange(0, time[len(time) - 1], dt)
+    time_axis = np.arange(0, time[-1], dt)
 
     # counts the number of values in time that are within each specified bin
     # range, time_axis
@@ -101,10 +100,10 @@ def pre_analysis(time, dt, period, plot_check=False):
     fs = 1 / dt  # frequency step
 
     # Fast Fourier Transform computation
-    NFFT = 2 ** nextpow2(len(bin_data))  # Length of the transformed axis of the output
+    NFFT = 2 ** nextpow2(bin_data.size)  # Length of the transformed axis of the output
     y = np.fft.fft(bin_data, NFFT)  # Computed FFT
-    N = NFFT / 2 + 1  # indices to erase the mirror effect from FFT
-    Y = np.abs(y[:int(N)])  # cleaned from all mirror effects
+    N = NFFT // 2 + 1  # indices to erase the mirror effect from FFT
+    Y = np.abs(y[:N])  # cleaned from all mirror effects
     freq_axis = fs / 2 * np.linspace(0, 1, N)
 
     # To give a zero value to the first components, due to FFT
@@ -151,7 +150,7 @@ def new_fold(time, dt, period, num_div, plot_check=False):
 
     Parameters
     ----------
-    time : numpy.ndarray or list
+    time : `~numpy.ndarray` or list
         Observed periodicity time with the telescope.
     dt : float
         Bintime.
@@ -165,9 +164,9 @@ def new_fold(time, dt, period, num_div, plot_check=False):
 
     Returns
     -------
-    lc : numpy.ndarray
+    lc : `~numpy.ndarray`
         Light curve of the input period. It is a one column array.
-    waterfall: numpy.ndarray
+    waterfall: `~numpy.ndarray`
         Matrix that contains an amount of num_div rows. The number of columns
         is Nint.
     """
@@ -185,21 +184,25 @@ def new_fold(time, dt, period, num_div, plot_check=False):
     period_div_dt = np.linspace(0, period, Nint + 1)
 
     # number of samples that will be considered for each row of the waterfall
-    num_samples = np.floor(len(time) / num_div)
+    num_samples = np.floor(time.size / num_div)
 
     # Modulus divions left. Return element-wise remainder of division
     remainder = np.mod(time, period)
 
     # for each line in the waterfall diagram
-    for line in np.arange(0, num_div, dtype=int):
+    for line in range(num_div):
         # selection of each num_div in time array
-        indices = np.arange(num_samples * line, num_samples * (line + 1), dtype=int)
+        indices = np.arange(
+            num_samples * line, num_samples * (line + 1), dtype=int
+            )
         # matrix that contains info for waterfall diagram
         if line == 0:
             waterfall = np.histogram(remainder[indices], bins=period_div_dt)[0]
         else:
-            waterfall = np.vstack((waterfall, np.histogram(remainder[indices],
-                bins=period_div_dt)[0]))
+            waterfall = np.vstack(
+                (waterfall, np.histogram(remainder[indices],
+                bins=period_div_dt)[0])
+                )
 
     # Light-Curve plot
     lc = np.histogram(remainder, period_div_dt)[0]
@@ -231,42 +234,47 @@ def new_fold(time, dt, period, num_div, plot_check=False):
 
     return lc, waterfall
 
+
 def fast_pca(waterfall, plot_check=False):
     """
     Finds PCs, eigenvalues and signal matrix from waterfall M x N matrix.
-    M: rows, number of segments in which the whole adquisition has been divided.
+    M: rows, number of segments in which the whole adquisition has been
+    divided.
     N: columns, number of bins in folding period. Number of eigenvalues.
 
     Parameters
     ----------
-    waterfall : numpy.ndarray
+    waterfall : `~numpy.ndarray`
         Matrix that contains an Amount of num_div rows (M). The number of columns is N.
     plot_check: boolean
         To decide if it is necesary an eye inspection.
 
     Returns
     -------
-    V_sorted : list
+    V_sorted : `list`
         Eigenvalues from the covariance of the normalized waterfall matrix. Means mu = 0 and std = 1.
         Organized in decreasent order. Also known as variance.
-    PC_sorted : numpy.ndarray
+    PC_sorted : `~numpy.ndarray`
         Unitary eigenvectors from the covariance of the normalized waterfall matrix that correspond to each
         eigenvalue. Sorted in the same way as the V_sorted list. One column, PC_sorted[:, i] represents one PC.
-    cov : numpy.ndarray
+    cov : `~numpy.ndarray`
         Covariance of the normalized waterfall matrix.
-    norm : numpy.ndarray
+    norm : `~numpy.ndarray`
         Normalization of the waterfall matrix. This is done for each row, (x - <x>)/std(x).
-    signal : numpy.ndarray
+    signal : `~numpy.ndarray`
         Is the transposed PC_sorted times the normalized waterfall matrix.
     """
+
     M, N = waterfall.shape  # This should be the waterfall matrix
     mean = np.mean(waterfall, axis=1).reshape(M, 1)
-    std = np.std(waterfall, axis=1, ddof=1).reshape(M, 1) # carful, different in matlab!
+
+    # carful, different in matlab!
+    std = np.std(waterfall, axis=1, ddof=1).reshape(M, 1)
 
     # Normalization waterfall matrix to mean=0 and std=1
-    norm = (waterfall - mean) / std # (x - <x>)/std(x)
+    norm = (waterfall - mean) / std  # (x - <x>)/std(x)
     # Covariance matrix
-    cov = 1 / (N - 1) * np.dot(norm,norm.T)
+    cov = 1 / (N - 1) * np.dot(norm, norm.T)
 
     # Eigenvalue, Eigenvector
     # PC[:, i] is the eigenvector corresponding to V[i] eigenvalue
@@ -316,6 +324,7 @@ def fast_pca(waterfall, plot_check=False):
 
     return V_sorted, PC_sorted, cov, norm, signals
 
+
 def delta_finder(period, iterations, delta, time, dt, num_div):
     """
     Finds the best period given an initial starting point, a number of iterations and a step to look for.
@@ -329,7 +338,7 @@ def delta_finder(period, iterations, delta, time, dt, num_div):
         Interger number to iterate the main function loop.
     delta : float
         Increase of the period in each iteration. The orther of it is between 1e-7 - 4e-9.
-    time : numpy.ndarray or list
+    time : `~numpy.ndarray` or list
         Observed periodicity time with the telescope.
     dt : float
         Bintime.
@@ -341,15 +350,15 @@ def delta_finder(period, iterations, delta, time, dt, num_div):
     -------
     period_final : float
         Optimum period of the iteration.
-    V_array : numpy.ndarray
+    V_array : `~numpy.ndarray`
         Values of all the eigenvalues, expressed as a np.array. i. e. V_array[:, 0] contains all the
         eigenvalues of the first position, or maximum eigenvalue. It has a length of the number of iterations.
-    S_array : numpy.ndarray
+    S_array : `~numpy.ndarray`
         Values of the first three scalars, expressed as a nu.array. i. e. S_array[:, 0] contains all the
         scalars of the first position. It has a length of the number of iterations. It is computed from the
         result of the hyperdimensional unitary vector times the eigenvalues (dot product), then the maximum
         absolute value per iteration is chosen.
-    mstev : numpy.ndarray
+    mstev : `~numpy.ndarray`
         Maximum scalar times the (selected) eigenvalue. It is the merit function selected to choose the right
         iteration. Represents the maximum scalar in a row (or in one iteration) minus the average of all the rest
         in the same interation. Then is multiplicated by the associated eigenvalue from the maximum scalar selected.
@@ -402,13 +411,16 @@ def delta_finder(period, iterations, delta, time, dt, num_div):
 
     return period_final, V_array, S_array, mstev, max_idx
 
-def find_period(time, period, dt, num_div, iter1, delta1, iter2, delta2, noisy_signal=True):
+
+def find_period(
+    time, period, dt, num_div, iter1, delta1, iter2, delta2, noisy_signal=True
+        ):
     """
     Finds the optimal period using PCA. Encapsulates two iterations in one.
 
     Parameters
     ----------
-    time : numpy.ndarray or list
+    time : `~numpy.ndarray` or list
         Observed periodicity time with the telescope.
     period : float
         Estimated period or staring period.
@@ -438,11 +450,11 @@ def find_period(time, period, dt, num_div, iter1, delta1, iter2, delta2, noisy_s
     period_final1, 2 : float
         Best period from the first and second iteration. The starting period of the second iteration
         corresponds to period_final2.
-    var_iter1, 2 : numpy.ndarray
+    var_iter1, 2 : `~numpy.ndarray`
         See V_array in delta_finder function. 1 and 2 for first and second iterations.
-    scalar_iter1, 2 : numpy.ndarray
+    scalar_iter1, 2 : `~numpy.ndarray`
         See S_array in delta_finder function. 1 and 2 for first and second iterations.
-    mstev_iter1, 2 : numpy.ndarray
+    mstev_iter1, 2 : `~numpy.ndarray`
         See mstev in delta_finder function. 1 and 2 for first and second iterations.
     max_index1,, 2 : int
         See max_idx in delta_finder function. 1 and 2 for first and second iterations.
@@ -463,6 +475,7 @@ def find_period(time, period, dt, num_div, iter1, delta1, iter2, delta2, noisy_s
 
     return [period, period_start1, period_final1, period_final2], [var_iter1, var_iter2], \
     [scalar_iter1, scalar_iter2], [mstev_iter1, mstev_iter2], [max_index1, max_index2]
+
 
 if __name__ == '__main__':
     """
