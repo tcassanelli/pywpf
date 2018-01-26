@@ -144,31 +144,31 @@ def pre_analysis(time, dt, period, plot_check=False):
 def new_fold(time, dt, period, num_div, plot_check=False):
     """
     Folding algorithm using the waterfall diagrams. Time is data in a the .csv
-    file. It is a column vector
-    num_div is the number of divisions made to the time array (aka data) or rows in waterfall The period
-    will only be an approximation, needs to be iterated to correct it!
+    file. It is a column vector ``num_div`` is the number of divisions made to
+    the time array (a.k.a. data) or rows in waterfall The period will only be
+    an approximation, needs to be iterated to correct it!
 
     Parameters
     ----------
     time : `~numpy.ndarray` or list
         Observed periodicity time with the telescope.
-    dt : float
+    dt : `float`
         Bintime.
-    period : float
+    period : `float`
         Estimated period or staring period.
-    num_div : int
-        Number of divisions made to the time array or rows in waterfall diagram. Later defined as M. It is
-        also the number of eigenvectors.
-    plot_check: boolean
-        To decide if it is necesary an eye inspection.
+    num_div : `int`
+        Number of divisions made to the time array or rows in waterfall
+        diagram. Later defined as M. It is also the number of eigenvectors.
+    plot_check : `bool`
+        If `True` will plot.
 
     Returns
     -------
     lc : `~numpy.ndarray`
         Light curve of the input period. It is a one column array.
-    waterfall: `~numpy.ndarray`
+    waterfall : `~numpy.ndarray`
         Matrix that contains an amount of num_div rows. The number of columns
-        is Nint.
+        is N.
     """
 
     if period < dt:
@@ -177,45 +177,40 @@ def new_fold(time, dt, period, num_div, plot_check=False):
     # Length light-curve. It needs to be a division with no modulus
     # N represents the columns in the waterfall
     # It has to be chosen the int value over the approximation
-    Nint = round(period / dt)
-    dt = period / Nint  # dt recalculated so it becomes an interger
+    M = num_div
+    N = round(period / dt)
+    dt_int = period / N  # dt recalculated so it becomes an interger
 
-    # Period division in Nint*dt
-    period_div_dt = np.linspace(0, period, Nint + 1)
+    # Period array with dt_int step and N + 1 elements
+    T = np.linspace(0, period, N + 1)
 
     # number of samples that will be considered for each row of the waterfall
-    num_samples = np.floor(time.size / num_div)
+    ns = time.size // M
 
     # Modulus divions left. Return element-wise remainder of division
-    remainder = np.mod(time, period)
+    remainder = time % period
 
     # for each line in the waterfall diagram
-    for line in range(num_div):
-        # selection of each num_div in time array
-        indices = np.arange(
-            num_samples * line, num_samples * (line + 1), dtype=int
-            )
+    w = []
+    for line in range(M):
+        # selection of each M in time array
+        indices = range(ns * line, ns * (line + 1))
         # matrix that contains info for waterfall diagram
-        if line == 0:
-            waterfall = np.histogram(remainder[indices], bins=period_div_dt)[0]
-        else:
-            waterfall = np.vstack(
-                (waterfall, np.histogram(remainder[indices],
-                bins=period_div_dt)[0])
-                )
+        w.append(np.histogram(remainder[indices], bins=T)[0])
+    waterfall = np.array(w)
 
     # Light-Curve plot
-    lc = np.histogram(remainder, period_div_dt)[0]
-    period_time_one = np.arange(0, period, dt)
+    lc = np.histogram(remainder, T)[0]
+    # period_time_one = np.arange(0, period, dt_int)
 
     # Stacking two periods together for visualization
     lc2 = np.hstack((lc, lc))
-    period_time_two = np.arange(0, 2 * period, dt)
+    period_time_two = np.linspace(0, period * 2, N * 2)
 
     if plot_check:
         fig1, ax1 = plt.subplots()
         ax1.plot(period_time_two, lc2, 'ro-', label='Period ' + str(period) + ' s', linewidth=1.5)
-        ax1.set_title('Light curve dt = ' + str(dt) + ' s')
+        ax1.set_title('Light curve dt = ' + str(dt_int) + ' s')
         ax1.set_xlabel('Time s')
         ax1.set_ylabel('Total counts')
         ax1.legend(loc='best')
@@ -225,7 +220,7 @@ def new_fold(time, dt, period, num_div, plot_check=False):
         im2 = ax2.imshow(waterfall, cmap=plt.cm.jet, interpolation='nearest', aspect='auto')
         cb = fig2.colorbar(im2, ax=ax2)
         cb.set_label('Total counts')
-        ax2.set_title('Waterfall rows: ' + str(num_div) + ', dt = ' + str(dt) + ' s')
+        ax2.set_title('Waterfall rows: ' + str(M) + ', dt = ' + str(dt_int) + ' s')
         ax2.set_xlabel('Bin s')
         ax2.set_ylabel('Light curves')
         ax2.grid()
@@ -280,9 +275,9 @@ def fast_pca(waterfall, plot_check=False):
     # PC[:, i] is the eigenvector corresponding to V[i] eigenvalue
     V, PC = np.linalg.eig(cov)
 
-    V_sorted = np.sort(V.real)[::-1].tolist() # Eigenvalue
+    V_sorted = np.sort(V.real)[::-1].tolist()  # Eigenvalue
     j_indices = np.argsort(V.real)[::-1]
-    PC_sorted = PC[:, j_indices] # Eigenvector or PCs
+    PC_sorted = PC[:, j_indices]  # Eigenvector or PCs
 
     signals = np.dot(PC_sorted.T, norm) # Information matrix, not clear whar represents!
 
@@ -483,14 +478,23 @@ if __name__ == '__main__':
     see how this behaves with the plots!
     """
 
-    file_name = 'FILE NAME' # Contains the time array
+    # file_name = 'FILE NAME' # Contains the time array
 
-    dt = 0.002793 # 4 ms, 0.002793 s
-    period_start = 0.089367 # Initial period, usualy well known
+    # dt = 0.002793  # 4 ms, 0.002793 s
+    # period_start = 0.089367  # Initial period, usualy well known
 
+    # num_div = 20
+
+    # time = np.genfromtxt('data_pulsar/' + file_name + '.csv')
+    # lc, water = new_fold(time, dt, period_start, num_div, plot_check=True)
+
+    # V_sorted, PC_sorted, cov, norm, signals = fast_pca(water, True)
+
+    # Testing the functions
+    dt = 0.002793
+    period = 0.089367
     num_div = 20
 
-    time = np.genfromtxt('data_pulsar/' + file_name + '.csv')
-    lc, water = new_fold(time, dt, period_start, num_div, plot_check=True)
+    time = np.genfromtxt('../../data_pulsar/rmr0.csv')
 
-    V_sorted, PC_sorted, cov, norm, signals = fast_pca(water, True)
+    lc, waterfall = new_fold(time, dt, period, num_div, plot_check=True)
