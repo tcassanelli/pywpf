@@ -1,0 +1,50 @@
+# Setting for PyPCAF.
+# Author: Tomas Cassanelli
+# Last update: 28.01.2018
+
+# Look here how to add more style!
+# https://github.com/matplotlib/matplotlib/blob/master/matplotlibrc.template
+
+
+# LINES
+lines.linewidth     : 0.8
+lines.markersize    : 3
+
+# TEXT
+text.usetex         : True
+mathtext.fontset    : stix
+
+# FONT
+font.family         : serif
+font.serif          : Computer Modern Roman
+font.size           : 7
+
+# AXES
+axes.labelsize      : 6
+axes.linewidth      : 0.3
+axes.titlesize      : 7
+axes.grid           : True
+axes.prop_cycle     : cycler('color', ['1f2db4', 'b41f2d', '1fb4a6', 'b4a61f'])
+
+# TICKS
+xtick.labelsize     : 6
+ytick.labelsize     : 6
+
+# IMAGES
+image.cmap          : viridis
+image.origin        : lower
+
+# GRIDS
+grid.linestyle      : --
+grid.alpha          : 0.4
+grid.linewidth      : 0.1
+grid.color          : b0b0b0
+
+# FIGURE
+figure.titlesize    : 7
+
+# LEGEND
+legend.fontsize     : 4
+legend.fancybox     : False
+legend.borderpad    : 0.2
+

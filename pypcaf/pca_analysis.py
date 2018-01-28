@@ -141,7 +141,7 @@ def pre_analysis(time, dt, period, plot_check=False):
     return bin_data, frequency
 
 
-def new_fold(time, dt, period, num_div, plot_check=False):
+def folding(time, dt, T_estimated, num_div):
     """
     Folding algorithm using the waterfall diagrams. Time is data in a the .csv
     file. It is a column vector ``num_div`` is the number of divisions made to
@@ -154,7 +154,7 @@ def new_fold(time, dt, period, num_div, plot_check=False):
         Observed periodicity time with the telescope.
     dt : `float`
         Bintime.
-    period : `float`
+    T_estimated : `float`
         Estimated period or staring period.
     num_div : `int`
         Number of divisions made to the time array or rows in waterfall
@@ -171,26 +171,26 @@ def new_fold(time, dt, period, num_div, plot_check=False):
         is N.
     """
 
-    if period < dt:
+    if T_estimated < dt:
         print('WARNING: Period cannot be smaller than bin size (dt)')
 
     # Length light-curve. It needs to be a division with no modulus
     # N represents the columns in the waterfall
     # It has to be chosen the int value over the approximation
     M = num_div
-    N = round(period / dt)
-    dt_int = period / N  # dt recalculated so it becomes an interger
+    N = round(T_estimated / dt)
 
     # Period array with dt_int step and N + 1 elements
-    T = np.linspace(0, period, N + 1)
+    T = np.linspace(0, T_estimated, N + 1)
 
     # number of samples that will be considered for each row of the waterfall
     ns = time.size // M
 
     # Modulus divions left. Return element-wise remainder of division
-    remainder = time % period
+    remainder = time % T_estimated
 
-    # for each line in the waterfall diagram
+    lc = np.histogram(remainder, T)[0]  # light-curve
+
     w = []
     for line in range(M):
         # selection of each M in time array
@@ -199,38 +199,10 @@ def new_fold(time, dt, period, num_div, plot_check=False):
         w.append(np.histogram(remainder[indices], bins=T)[0])
     waterfall = np.array(w)
 
-    # Light-Curve plot
-    lc = np.histogram(remainder, T)[0]
-    # period_time_one = np.arange(0, period, dt_int)
-
-    # Stacking two periods together for visualization
-    lc2 = np.hstack((lc, lc))
-    period_time_two = np.linspace(0, period * 2, N * 2)
-
-    if plot_check:
-        fig1, ax1 = plt.subplots()
-        ax1.plot(period_time_two, lc2, 'ro-', label='Period ' + str(period) + ' s', linewidth=1.5)
-        ax1.set_title('Light curve dt = ' + str(dt_int) + ' s')
-        ax1.set_xlabel('Time s')
-        ax1.set_ylabel('Total counts')
-        ax1.legend(loc='best')
-        ax1.grid()
-
-        fig2, ax2 = plt.subplots()
-        im2 = ax2.imshow(waterfall, cmap=plt.cm.jet, interpolation='nearest', aspect='auto')
-        cb = fig2.colorbar(im2, ax=ax2)
-        cb.set_label('Total counts')
-        ax2.set_title('Waterfall rows: ' + str(M) + ', dt = ' + str(dt_int) + ' s')
-        ax2.set_xlabel('Bin s')
-        ax2.set_ylabel('Light curves')
-        ax2.grid()
-
-        plt.show()
-
     return lc, waterfall
 
 
-def fast_pca(waterfall, plot_check=False):
+def pca(waterfall):
     """
     Finds PCs, eigenvalues and signal matrix from waterfall M x N matrix.
     M: rows, number of segments in which the whole adquisition has been
@@ -273,54 +245,53 @@ def fast_pca(waterfall, plot_check=False):
 
     # Eigenvalue, Eigenvector
     # PC[:, i] is the eigenvector corresponding to V[i] eigenvalue
-    V, PC = np.linalg.eig(cov)
+    EVal, EVec = np.linalg.eig(cov)
 
-    V_sorted = np.sort(V.real)[::-1].tolist()  # Eigenvalue
-    j_indices = np.argsort(V.real)[::-1]
-    PC_sorted = PC[:, j_indices]  # Eigenvector or PCs
+    # Sorting the eigenvalues and vectors
+    EVal_sorted = np.sort(EVal.real)[::-1]             # eigenvalues
+    EVec_sorted = EVec[:, np.argsort(EVal.real)[::-1]]  # eigenvectors or PCs
+    K = np.dot(EVec_sorted.T, norm)                # information (signal) matrix
 
-    signals = np.dot(PC_sorted.T, norm) # Information matrix, not clear whar represents!
+    # # Plot to visualize the PCs
+    # if plot_check:
+    #     width = 0.8
+    #     ind = np.arange(0, len(V_sorted))
 
-    # Plot to visualize the PCs
-    if plot_check:
-        width = 0.8
-        ind = np.arange(0, len(V_sorted))
+    #     fig1, ax1 = plt.subplots()
+    #     ax1.bar(ind, V_sorted, width=width)
+    #     ax1.set_xlabel('Component value')
+    #     ax1.set_ylabel('Eigenvalue amplitude')
+    #     ax1.set_title('PCA values')
+    #     ax1.set_xticks(ind + width/2)
+    #     ax1.set_xticklabels(np.arange(1, len(V) + 1, dtype=int))
+    #     ax1.grid()
+    #     ax1.set_ylim([-0.1, V_sorted[0] + 0.1])
+    #     ax1.set_xlim([-0.1, len(V)])
 
-        fig1, ax1 = plt.subplots()
-        ax1.bar(ind, V_sorted, width=width)
-        ax1.set_xlabel('Component value')
-        ax1.set_ylabel('Eigenvalue amplitude')
-        ax1.set_title('PCA values')
-        ax1.set_xticks(ind + width/2)
-        ax1.set_xticklabels(np.arange(1, len(V) + 1, dtype=int))
-        ax1.grid()
-        ax1.set_ylim([-0.1, V_sorted[0] + 0.1])
-        ax1.set_xlim([-0.1, len(V)])
+    #     fig2, ax2 = plt.subplots()
+    #     im2 = ax2.imshow(S, interpolation='nearest', aspect='auto')
+    #     cb2 = fig2.colorbar(im2, ax=ax2)
+    #     cb2.set_label('Norm(0, 1) counts')
+    #     ax2.set_title('Signal = PC.T * normalized')
+    #     ax2.set_xlabel('Bins s')
+    #     ax2.set_ylabel('Light curves')
+    #     ax2.grid()
 
-        fig2, ax2 = plt.subplots()
-        im2 = ax2.imshow(signals, interpolation='nearest', aspect='auto')
-        cb2 = fig2.colorbar(im2, ax=ax2)
-        cb2.set_label('Norm(0, 1) counts')
-        ax2.set_title('Signal = PC.T * normalized')
-        ax2.set_xlabel('Bins s')
-        ax2.set_ylabel('Light curves')
-        ax2.grid()
+    #     fig3, ax3 = plt.subplots()
+    #     im3 = ax3.imshow(norm, interpolation='nearest', aspect='auto')
+    #     cb3 = fig3.colorbar(im3, ax=ax3)
+    #     cb3.set_label('Norm(0, 1) counts')
+    #     ax3.set_title('Normalized waterfall')
+    #     ax3.set_xlabel('Bins s')
+    #     ax3.set_ylabel('Light curves')
+    #     ax3.grid()
 
-        fig3, ax3 = plt.subplots()
-        im3 = ax3.imshow(norm, interpolation='nearest', aspect='auto')
-        cb3 = fig3.colorbar(im3, ax=ax3)
-        cb3.set_label('Norm(0, 1) counts')
-        ax3.set_title('Normalized waterfall')
-        ax3.set_xlabel('Bins s')
-        ax3.set_ylabel('Light curves')
-        ax3.grid()
+    #     plt.show()
 
-        plt.show()
-
-    return V_sorted, PC_sorted, cov, norm, signals
+    return EVal_sorted, EVec_sorted, K
 
 
-def delta_finder(period, iterations, delta, time, dt, num_div):
+def delta_finder(T_init, iterations, delta, time, dt, num_div, merit_func):
     """
     Finds the best period given an initial starting point, a number of iterations and a step to look for.
     It is the most inportant function which define the method of selection and the merit function of the script!
@@ -362,53 +333,45 @@ def delta_finder(period, iterations, delta, time, dt, num_div):
         Notice that the period search starts from (period - iterations / 2 * delta).
     """
     # makes an interval from central period, [period - i/2 * delta, period + i/2 * delta]
-    period_iter = period - iterations / 2 * delta
 
-    VARIANCE = []
-    SCALAR = []  # Scalar matrix
-    unit_vec = np.ones((num_div, 1)) / np.sqrt(num_div)  # unitary vector
+    M = num_div
+    T_iterated = T_init - iterations / 2 * delta
+
+    eigenvalues = []
+    scalar = []  # Scalar matrix
+    u = np.ones((M, 1)) / np.sqrt(M)  # hyperdiagonal unitary vector
 
     for i in range(iterations):
-        waterfall = new_fold(time, dt, period_iter, num_div)[1]
-        eigenvalues, eigenvectors, _, _, _ = fast_pca(waterfall)
+        waterfall = folding(
+            time=time, dt=dt, T_estimated=T_iterated, num_div=M
+            )[1]
+
+        EVal, EVec, K = pca(waterfall=waterfall)
 
         # It is a vector with scalar_to_save = [s0, s1, s2, ...] for the num_div value
-        scalar_to_save = np.sum(eigenvectors * unit_vec, axis=0).tolist()
+        scalar.append(np.sum(EVec * u, axis=0))
+        # Both values are in decreasing order
 
-        SCALAR.append(scalar_to_save)  # Both values are in decreasing order
-        VARIANCE.append(eigenvalues)
+        eigenvalues.append(EVal)
 
-        period_iter += delta
+        T_iterated += delta
 
-    S_array = np.abs(np.array(SCALAR))  # S_array[:, 0] represents all iteration for the first eigenvector
-    V_array = np.array(VARIANCE)  # V_array[:, 0] represents all iteration for the first eigenvalue
+    # scalar and eigenvalues from waterfall N x M matrix
+    Sw = np.abs(scalar)  # Sw[:, 0] represents all iteration for the first eigenvector
 
-    # Correspondent eigenvalue to the maximum selected scalar
-    # V_corr = np.choose(np.argmax(S_array, axis=1), V_array.T)   # has a 32 lim!
-    S_array_argmax = np.argmax(S_array, axis=1)
+    EValw = np.array(eigenvalues)  # EValw[:, 0] represents all iteration for the first eigenvalue
 
-    V_corr = V_array[range(S_array_argmax.size), S_array_argmax]
+    merit = merit_func(EValw=EValw, Sw=Sw)
 
-    S_avg = [] # max scalar minus its average
-    M = len(S_array[0])
-    N = len(S_array[:, 0])
-    for i in range(0, N):
-        noise = np.sum(S_array[i]) - np.max(S_array[i])
-        S_avg.append(np.max(S_array[i]) - noise / (M - 1))
-    S_avg_array = np.array(S_avg)
+    idx_max = flat_region_finder(merit)
 
-    # (maximum scalar minus average) times the associated eigenvalue
-    mstev = S_avg_array * V_corr # mstev = Maximum Scalar Times EigenValue
+    T_estimated = T_init - iterations / 2 * delta + idx_max * delta
 
-    max_idx = flat_region_finder(mstev.tolist())[0]
-
-    period_final = period - iterations / 2 * delta + max_idx * delta
-
-    return period_final, V_array, S_array, mstev, max_idx
+    return T_estimated, EValw, Sw, merit, idx_max
 
 
 def find_period(
-    time, period, dt, num_div, iter1, delta1, iter2, delta2, noisy_signal=True
+    time, T_init, dt, num_div, iter1, delta1, iter2, delta2, merit_func, noisy_signal=True
         ):
     """
     Finds the optimal period using PCA. Encapsulates two iterations in one.
@@ -455,21 +418,39 @@ def find_period(
         See max_idx in delta_finder function. 1 and 2 for first and second iterations.
     """
 
-    if noisy_signal:
-        period_start1 = period
-    else:
-        freq_start = pre_analysis(time, dt, period)[1]
-        period_start1 = 1 / freq_start
+    # if noisy_signal:
+    #     period_start1 = period
+    # else:
+    #     freq_start = pre_analysis(time, dt, period)[1]
+    #     period_start1 = 1 / freq_start
 
-    period_final1, var_iter1, scalar_iter1, mstev_iter1, max_index1 = \
-    delta_finder(period_start1, iter1, delta1, time, dt, num_div)
+    (
+        T_est1, EValw1, Sw1, M1, idx1_max
+        ) = delta_finder(
+        T_init=T_init,
+        iterations=iter1,
+        delta=delta1,
+        time=time,
+        dt=dt,
+        num_div=num_div,
+        merit_func=merit_func
+        )
 
-    period_start2 = period_final1
-    period_final2, var_iter2, scalar_iter2, mstev_iter2, max_index2 = \
-    delta_finder(period_start2, iter2, delta2, time, dt, num_div)
+    (
+        T_est2, EValw2, Sw2, M2, idx2_max
+        ) = delta_finder(
+        T_init=T_est1,
+        iterations=iter2,
+        delta=delta2,
+        time=time,
+        dt=dt,
+        num_div=num_div,
+        merit_func=merit_func
+        )
 
-    return [period, period_start1, period_final1, period_final2], [var_iter1, var_iter2], \
-    [scalar_iter1, scalar_iter2], [mstev_iter1, mstev_iter2], [max_index1, max_index2]
+    T = [T_init, T_est1, T_est2]
+
+    return T, [idx1_max, idx2_max], [EValw1, EValw2], [Sw1, Sw2], [M1, M2]
 
 
 if __name__ == '__main__':
@@ -486,9 +467,9 @@ if __name__ == '__main__':
     # num_div = 20
 
     # time = np.genfromtxt('data_pulsar/' + file_name + '.csv')
-    # lc, water = new_fold(time, dt, period_start, num_div, plot_check=True)
+    # lc, water = folding(time, dt, period_start, num_div, plot_check=True)
 
-    # V_sorted, PC_sorted, cov, norm, signals = fast_pca(water, True)
+    # V_sorted, PC_sorted, cov, norm, signals = pca(water, True)
 
     # Testing the functions
     dt = 0.002793
@@ -497,4 +478,7 @@ if __name__ == '__main__':
 
     time = np.genfromtxt('../../data_pulsar/rmr0.csv')
 
-    lc, waterfall = new_fold(time, dt, period, num_div, plot_check=True)
+    lc, waterfall = folding(time, dt, period, num_div, plot_check=True)
+
+    print('lc.shape: ', lc.shape)
+    print('waterfall.shape: ', waterfall.shape)
