@@ -20,15 +20,15 @@ font.serif          : Computer Modern Roman
 font.size           : 7
 
 # AXES
-axes.labelsize      : 6
+axes.labelsize      : 7
 axes.linewidth      : 0.3
-axes.titlesize      : 7
+axes.titlesize      : 8
 axes.grid           : True
 axes.prop_cycle     : cycler('color', ['1f2db4', 'b41f2d', '1fb4a6', 'b4a61f'])
 
 # TICKS
-xtick.labelsize     : 6
-ytick.labelsize     : 6
+xtick.labelsize     : 7
+ytick.labelsize     : 7
 
 # IMAGES
 image.cmap          : viridis
@@ -36,15 +36,17 @@ image.origin        : lower
 
 # GRIDS
 grid.linestyle      : --
-grid.alpha          : 0.4
-grid.linewidth      : 0.1
+grid.alpha          : 0.6
+grid.linewidth      : 0.2
 grid.color          : b0b0b0
 
 # FIGURE
 figure.titlesize    : 7
 
 # LEGEND
-legend.fontsize     : 4
+legend.fontsize     : 6
 legend.fancybox     : False
-legend.borderpad    : 0.2
+legend.borderpad    : 0.4
+legend.framealpha   : 1
+legend.edgecolor    : 0.9
 

@@ -1,9 +1,19 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# Author: Tomas Cassanelli
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.io import ascii
+from scipy.constants import golden
 
-plt.style.use('pypcaf_sty.mplstyle')
+
+__all__ = ['plot_waterfall', 'plot_lc', 'plot_period', 'plot_all_periods']
+
+# Plot style added from relative path
+plotstyle_dir = os.path.dirname(__file__)
+plt.style.use(os.path.join(plotstyle_dir, 'pypcaf_sty.mplstyle'))
 
 
 def plot_waterfall(waterfall, T):
@@ -42,150 +52,74 @@ def plot_lc(lc, N, T):
     return fig
 
 
-def plot_period(pcaf_path, num_div):
-
-    # M, dt, iter1, iter2, delta1, delta2, T_init, T_est1, T_est2, idx1_max, idx2_max
-    # [EValw1, EValw2], [Sw1, Sw2], [M1, M2]
+def plot_period(pcaf_path, num_div, T_ref=None):
 
     pcaf_info = os.path.join(pcaf_path, 'pcaf_info.dat')
-    pcaf_out = os.path.join(pcaf_path, 'pcaf_out_M{}.npz'.format(num_div - 1))
-
-    fig, ax = plt.subplots(nrows=2)
-
+    pcaf_out = os.path.join(pcaf_path, 'pcaf_out_M{}.npz'.format(num_div))
     info = ascii.read(pcaf_info)
-    print(info)
 
-    M = np.where(info['num_div'] == num_div)[0][0]
+    # index relative to the num_div
+    idx = np.where(info['num_div'] == num_div)[0][0]
 
     data = np.load(pcaf_out)
 
     time_x1 = np.linspace(
-        info['T_init'][M] - info['delta1'][M] * info['iter1'][M] / 2,
-        info['T_init'][M] + info['delta1'][M] * info['iter1'][M] / 2,
-        info['iter1'][M],
+        info['T_init'][idx] - info['delta1'][idx] * info['iter1'][idx] / 2,
+        info['T_init'][idx] + info['delta1'][idx] * info['iter1'][idx] / 2,
+        info['iter1'][idx],
         endpoint=False
         )
 
     time_x2 = np.linspace(
-        info['T_est1'][M] - info['delta2'][M] * info['iter2'][M] / 2,
-        info['T_est1'][M] + info['delta2'][M] * info['iter2'][M] / 2,
-        info['iter2'][M],
+        info['T_est1'][idx] - info['delta2'][idx] * info['iter2'][idx] / 2,
+        info['T_est1'][idx] + info['delta2'][idx] * info['iter2'][idx] / 2,
+        info['iter2'][idx],
         endpoint=False
         )
 
     time_x = [time_x1, time_x2]
 
+    fig, ax = plt.subplots(nrows=2, figsize=(15, 15 / golden))
 
-    # Eignevalues 1 and 2
-    ax[0].plot(
-        time_x[0],
-        data['EVALW1'][:, 0],
-        label='$u_1$',
-        color='b',
-        linewidth=.8,
-        alpha=1,
-        linestyle='-',
-        marker='+'
-        )
-    ax[0].plot(
-        time_x[0],
-        data['EVALW1'][:, 1],
-        label='$u_2$',
-        color='b',
-        linewidth=.8,
-        alpha=.5,
-        linestyle='-',
-        marker='+'
-        )
+    for i, alpha in zip(range(2), [1, .5]):
+        for j in range(2):
 
-    ax[1].plot(
-        time_x[1],
-        data['EVALW2'][:, 0],
-        label='$u_1$',
-        color='b',
-        linewidth=.8,
-        alpha=1,
-        linestyle='-',
-        marker='+'
-        )
-    ax[1].plot(
-        time_x[1],
-        data['EVALW2'][:, 1],
-        label='$u_2$',
-        color='b',
-        linewidth=.8,
-        alpha=.5,
-        linestyle='-',
-        marker='+'
-        )
+            # Eigenvalues 1 and 2
+            ax[j].plot(
+                time_x[j],
+                data['EVALW{}'.format(j + 1)][:, i],
+                label='$u_' + str(i + 1) + '$',
+                color='b',
+                linewidth=.8,
+                alpha=alpha,
+                linestyle='-',
+                marker='+'
+                )
 
-    # Scalars 1 and 2
-    ax[0].plot(
-        time_x[0],
-        data['SW1'][:, 0],
-        label='$u_1$',
-        color='g',
-        linewidth=.8,
-        alpha=1,
-        linestyle='-',
-        marker='^'
-        )
-    ax[0].plot(
-        time_x[0],
-        data['SW1'][:, 1],
-        label='$u_2$',
-        color='g',
-        linewidth=.8,
-        alpha=.5,
-        linestyle='-',
-        marker='^'
-        )
+            # Scalar 1 and 2
+            ax[j].plot(
+                time_x[j],
+                data['SW{}'.format(j + 1)][:, i],
+                label='$s_' + str(i + 1) + '$',
+                color='g',
+                linewidth=.8,
+                alpha=alpha,
+                linestyle='-',
+                marker='^'
+                )
 
-    ax[1].plot(
-        time_x[1],
-        data['SW2'][:, 0],
-        label='$u_1$',
-        color='g',
-        linewidth=.8,
-        alpha=1,
-        linestyle='-',
-        marker='^'
-        )
-    ax[1].plot(
-        time_x[1],
-        data['SW2'][:, 1],
-        label='$u_2$',
-        color='g',
-        linewidth=.8,
-        alpha=.5,
-        linestyle='-',
-        marker='^'
-        )
+            # Merit functions 1 and 2
+            ax[j].plot(
+                time_x[j],
+                data['MERIT{}'.format(j + 1)],
+                label='$M_' + str(i + 1) + '$',
+                color='r',
+                linewidth=1,
+                linestyle='-',
+                marker='o'
+                )
 
-    # Virtical lines: T_est
-    ax[0].axvline(
-        x=info['T_est1'][M],
-        color='y',
-        label='$T_\\mathrm{est}$',
-        linewidth=.8
-        )
-    ax[1].axvline(
-        x=info['T_est2'][M],
-        color='y',
-        label='$T_\\mathrm{est}$',
-        linewidth=.8
-        )
-
-    # Merit functions
-    ax[0].plot(
-        time_x[0],
-        data['MERIT1'],
-        label='$M_1$',
-        color='r',
-        linewidth=1,
-        linestyle='-',
-        marker='o'
-        )
+    # Merit function 1 in second plot
     ax[1].plot(
         time_x[0],
         data['MERIT1'],
@@ -194,35 +128,81 @@ def plot_period(pcaf_path, num_div):
         linewidth=0.3,
         linestyle='-',
         )
-    ax[1].plot(
-        time_x[1],
-        data['MERIT2'],
-        label='$M_2$',
-        color='r',
-        linewidth=1,
-        linestyle='-',
-        marker='o'
+
+    # Virtical lines: T_est
+    ax[0].axvline(
+        x=info['T_est1'][idx],
+        color='y',
+        label='$T_\\mathrm{est1}$',
+        linewidth=.8
+        )
+    ax[1].axvline(
+        x=info['T_est1'][idx],
+        color='y',
+        label='$T_\\mathrm{est1}$',
+        linewidth=.8
+        )
+    ax[1].axvline(
+        x=info['T_est2'][idx],
+        color='m',
+        label='$T_\\mathrm{est2}$',
+        linewidth=.8
         )
 
+    # Adding reference period, optional
+    if T_ref is not None:
+        for _ax in ax:
+            _ax.axvline(
+                x=T_ref,
+                color='c',
+                label='$T_\\mathrm{ref}$',
+                linewidth=.8
+                )
+
     # Titles
+    name = os.path.split(pcaf_path)[1]
     ax[0].set_title(
-        'First iteration. $T={}$'.format(np.round(info['T_est1'][M], 3))
+        name + ' first iteration. $T_\\mathrm{est1}=' +
+        str(info['T_est1'][idx]) + '$ s, $dt=' + str(info['dt'][idx]) +
+        '$ s, $M=' + str(info['num_div'][idx]) + '$'
         )
     ax[1].set_title(
-        'Second iteration. $T={}$'.format(np.round(info['T_est2'][M], 3))
+        name + ' second iteration. $T_\\mathrm{est2}=' +
+        str(info['T_est2'][idx]) + '$ s, $dt=' + str(info['dt'][idx]) +
+        '$ s, $M=' + str(info['num_div'][idx]) + '$'
         )
 
     for i in range(2):
-        ax[i].grid()
         ax[i].set_xlabel('Time s')
         ax[i].set_ylabel('Scalar, eigenvalues and merit amplitude')
         ax[i].set_xlim(time_x[i][0], time_x[i][-1])
         ax[i].legend(loc='upper right')
 
+    fig.tight_layout()
+
     return fig
 
 
-if __name__ == '__main__':
+def plot_all_periods(pcaf_path, T_ref=None):
 
-    plot_period(pcaf_path='./', num_div=2)
-    plt.show()
+    pcaf_info = os.path.join(pcaf_path, 'pcaf_info.dat')
+    info = ascii.read(pcaf_info)
+    num_div = info['num_div']
+
+    print('\n ... Making plots for all periods ... \n')
+    print(info)
+    print('\n')
+
+    path_plot = os.path.join(pcaf_path, 'plots')
+    if not os.path.exists(path_plot):
+        os.makedirs(path_plot)
+
+    # Iteration over all number of divisions in waterfall (M)
+    for M in num_div:
+        fig = plot_period(pcaf_path=pcaf_path, num_div=int(M), T_ref=T_ref)
+        fig.savefig(os.path.join(path_plot, 'pcaf_M{}.pdf'.format(int(M))))
+
+
+# if __name__ == '__main__':
+
+#     plot_all_periods(pcaf_path='pcaf_out/n2600-000', T_ref=0.08936715)
