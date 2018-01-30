@@ -19,8 +19,8 @@ def pcaf(
 
     start_time = time.time()
 
-    print('\n ******* PCA Folding: finding pulsar period ******* \n')
-    print('... total number of num_div loops: {} ... \n'.format(len(num_div)))
+    print('\n ******* PyPCAF: finding pulsar period ******* \n')
+    print('... Total number of num_div loops: {} ... \n'.format(len(num_div)))
     print('... Reading data ... \n')
     name = os.path.split(path_time)[1][:-4]  # input must be .npy file
     print('... Extracting period from {}.npy ... \n'.format(name))
@@ -34,14 +34,17 @@ def pcaf(
 
     pcaf_info = Table(
         names=[
-        'num_div', 'dt', 'iter1', 'iter2', 'delta1', 'delta2',
-        'T_init', 'T_est1', 'T_est2', 'idx1_max', 'idx2_max'
+            'num_div', 'dt', 'iter1', 'iter2', 'delta1', 'delta2',
+            'T_init', 'T_est1', 'T_est2', 'idx1_max', 'idx2_max'
             ]
         )
 
     # M is the number of divisions
     i_loops = 1  # loop/iteration counter
     for M in num_div:
+
+        print('... Computing loop {} ...\n'.format(i_loops))
+        i_loops += 1
 
         (
             T, [idx1_max, idx2_max], [EValw1, EValw2], [Sw1, Sw2], [M1, M2]
@@ -73,9 +76,6 @@ def pcaf(
             T_init, T_est1, T_est2, idx1_max, idx2_max
             ])
 
-        print('... {} loops completed ...\n'.format(i_loops))
-        i_loops += 1
-
     print(pcaf_info)
     print('\n... Storing data ... \n')
 
@@ -104,43 +104,5 @@ def pcaf(
 
     final_time = np.round((time.time() - start_time) / 60, 2)
     print(
-        '\n **** PCA Folding Completed at {} mins **** \n'.format(final_time)
+        '\n **** PyPCAF Completed at {} mins **** \n'.format(final_time)
         )
-
-
-if __name__ == '__main__':
-
-    from merit_functions import merit1
-
-    path_time = '../../data_pulsar/n2600.npy'
-
-    # Initial values to start the execution
-    dt = 0.002793            # 4 ms, 0.002793 s
-    T_init = 0.089367  # Initial period, usualy well known
-
-    iteration1 = 100  # 10
-    delta1 = 1e-7
-
-    iteration2 = 400  # 1000, 400
-    delta2 = 1e-8
-
-    num_div = range(3, 7)  # 2 or more, not 0, or 1
-
-    pcaf(
-        path_time=path_time,
-        T_init=T_init,
-        dt=dt,
-        iteration1=iteration1,
-        iteration2=iteration2,
-        delta1=delta1,
-        delta2=delta2,
-        num_div=num_div,
-        merit_func=merit1
-        )
-
-
-    # todos
-    # iteration over num_div or dt
-    # ad 000 labels on every run
-    # config file
-

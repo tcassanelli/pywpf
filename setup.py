@@ -25,7 +25,8 @@ setup(
         },
     package_data={
         '': ['pypcaf_sty.mplstyle'],
-        # '': ['config_params.yaml']},
+        # '': ['config_params.yaml']
+        },
     long_description='''
     PyPCAF - Principal Componen Analysis (PCA) Folding.
     '''

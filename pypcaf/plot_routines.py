@@ -201,8 +201,3 @@ def plot_all_periods(pcaf_path, T_ref=None):
     for M in num_div:
         fig = plot_period(pcaf_path=pcaf_path, num_div=int(M), T_ref=T_ref)
         fig.savefig(os.path.join(path_plot, 'pcaf_M{}.pdf'.format(int(M))))
-
-
-# if __name__ == '__main__':
-
-#     plot_all_periods(pcaf_path='pcaf_out/n2600-000', T_ref=0.08936715)
