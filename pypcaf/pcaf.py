@@ -20,7 +20,7 @@ def pcaf(
     start_time = time.time()
 
     print('\n ******* PyPCAF: finding pulsar period ******* \n')
-    print('... Total number of num_div loops: {} ... \n'.format(len(num_div)))
+    print('... Total number of num_div loops: {} ... \n'.format(num_div.size))
     print('... Reading data ... \n')
     name = os.path.split(path_time)[1][:-4]  # input must be .npy file
     print('... Extracting period from {}.npy ... \n'.format(name))
@@ -81,19 +81,19 @@ def pcaf(
 
     # Making sub-directory to store data
     for j in ["%03d" % i for i in range(101)]:
-        dir_name = os.path.join('pcaf_out', name + '-' + str(j))
+        dir_name = os.path.join('pypcaf_out', name + '-' + str(j))
         if not os.path.exists(dir_name):
             os.makedirs(dir_name)
             break
 
     ascii.write(
-        output=os.path.join(dir_name, 'pcaf_info.dat'),
+        output=os.path.join(dir_name, 'pypcaf_info.dat'),
         table=pcaf_info
         )
 
-    for M, idx in zip(num_div, range(len(num_div))):
+    for M, idx in zip(num_div, range(num_div.size)):
         np.savez(
-            os.path.join(dir_name, 'pcaf_out_M{}'.format(M)),
+            os.path.join(dir_name, 'pypcaf_out_M{}'.format(M)),
             EVALW1=EVALW1[idx],
             EVALW2=EVALW2[idx],
             MERIT1=MERIT1[idx],

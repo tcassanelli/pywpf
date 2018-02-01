@@ -108,16 +108,16 @@ def plot_period(pcaf_path, num_div, T_ref=None):
                 marker='^'
                 )
 
-            # Merit functions 1 and 2
-            ax[j].plot(
-                time_x[j],
-                data['MERIT{}'.format(j + 1)],
-                label='$M_' + str(i + 1) + '$',
-                color='r',
-                linewidth=1,
-                linestyle='-',
-                marker='o'
-                )
+        # Merit functions 1 and 2
+        ax[i].plot(
+            time_x[i],
+            data['MERIT{}'.format(i + 1)],
+            label='$M_' + str(i + 1) + '$',
+            color='r',
+            linewidth=1,
+            linestyle='-',
+            marker='o'
+            )
 
     # Merit function 1 in second plot
     ax[1].plot(
@@ -164,12 +164,12 @@ def plot_period(pcaf_path, num_div, T_ref=None):
     ax[0].set_title(
         name + ' first iteration. $T_\\mathrm{est1}=' +
         str(info['T_est1'][idx]) + '$ s, $dt=' + str(info['dt'][idx]) +
-        '$ s, $M=' + str(info['num_div'][idx]) + '$'
+        '$ s, $M=' + str(int(info['num_div'][idx])) + '$'
         )
     ax[1].set_title(
         name + ' second iteration. $T_\\mathrm{est2}=' +
         str(info['T_est2'][idx]) + '$ s, $dt=' + str(info['dt'][idx]) +
-        '$ s, $M=' + str(info['num_div'][idx]) + '$'
+        '$ s, $M=' + str(int(info['num_div'][idx])) + '$'
         )
 
     for i in range(2):

@@ -3,7 +3,7 @@
 
 # Author: Tomas Cassanelli
 from setuptools import setup
-
+# from Cython.Build import cythonize
 
 setup(
     name='pypcaf',
@@ -17,7 +17,9 @@ setup(
         'scipy>=0.15',
         'astropy>=1.1',
         'matplotlib>=2.0',
+        'cython'
     ],
+    # ext_modules=cythonize("pypcaf/pcaf_functions.pyx"),
     packages=['pypcaf'],
     package_dir={
         'pypcaf': 'pypcaf',

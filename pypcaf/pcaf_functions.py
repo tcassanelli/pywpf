@@ -33,27 +33,20 @@ def nextpow2(n):
 
 def flat_region_finder(X, n=3):
     """
-    To find the best location for the period a fine search has to be done, not
-    only where the maximum is located but also where there is a plateau of
-    maximums. This becomes clear when the merit function is plotted.
+    Finds the highest (or maximum) plateau region in data, the plateau has
+    length ``n``, then among the ``n`` points returns its maximum.
 
     Parameters
     ----------
     X : `~numpy.ndarray`
-        Array to find maximum region, it is in the particular case the mstev (
-        maximum to scalar eigenvalue).
+        One dimensional array where the maximum needs to be found.
     n : `int`
-        Number of division that the plateau has to have, for observed data 3
-        is more or less correct.
+        Number of points in the plateau region.
 
     Returns
     -------
-    idx_final : `int`
-        Index of the position of the maximum point between a plateau of n
-        points. Eventually this is the maximum
-        period position.
-    maximum : `float`
-        The maximum number chosen between the three local maximums.
+    idx_max : `int`
+        Index or position in the ``X`` array where the maximum of a plateau of length ``n`` is located.
     """
 
     flat_region = [sum(X[i:i + n]) for i in range(X.size - n + 1)]
@@ -66,119 +59,122 @@ def flat_region_finder(X, n=3):
     return idx_max
 
 
-def pre_analysis(time, dt, period):
+def pre_analysis(time, dt, T_init):
     """
-    Given an initial frequncy, finds a better one using FFT.
+    Given a one dimensional time array, ``time``, the function computes its
+    FFT to find a better period than the given one, ``T_init``. Be aware that
+    depending on the signal-to-noise of the time array, may or may not find a
+    correct value. For really noisy signals do not use this function.
 
     Parameters
     ----------
-    time : `~numpy.ndarray` or list
-        Observed periodicity time with the telescope.
-    dt : float
-        Bintime.
-    period : float
-        Estimated period or staring period.
+    time : `~numpy.ndarray`
+        One dimensional time array with certain hidden periodicity, e.g. pulsar period.
+    dt : `float`
+        Binned time.
+    T_init : `float`
+        Initial period.
 
     Returns
     -------
-    bin_data : `~numpy.ndarray`
-        Return the bin edges (length(hist)+1) from the computed histogram of a
-        set of data time.
-    frquency: float
-        Returns the approximated frquency after an FFT search.
+    T_est : `float`
+        Estimated period from the ``time`` array, found by a FFT analysis.
     """
 
-    freq_start = 1 / period
+    if T_init < dt:
+        raise TypeError(
+            'Initial period (T_init) cannot be smaller than binned time (dt)'
+            )
 
-    # Setting the x axis for histogram, represents the time discrete position
-    time_axis = np.arange(0, time[-1], dt)
+    f_start = 1 / T_init  # starting frequency
 
-    # counts the number of values in time that are within each specified bin
-    # range, time_axis
-    bin_data = np.histogram(time, bins=time_axis)[0]
+    # Setting the x axis for histogram
+    time_n = int(round(time[-1] / dt) + 1)  # number of elements in time array
+    time_x = np.linspace(0, time[-1], time_n)
 
-    fs = 1 / dt  # frequency step
+    # counts the number of values in the time array that are within each
+    # specified bin range, time_x
+    binned_data = np.histogram(time, bins=time_x)[0]
 
-    # Fast Fourier Transform computation
-    NFFT = 2 ** nextpow2(bin_data.size)  # Length of the transformed axis of the output
-    y = np.fft.fft(bin_data, NFFT)  # Computed FFT
-    N = NFFT // 2 + 1  # indices to erase the mirror effect from FFT
-    Y = np.abs(y[:N])  # cleaned from all mirror effects
-    freq_axis = fs / 2 * np.linspace(0, 1, N)
+    f_step = 1 / dt  # frequency step
+    NFFT = 2 ** nextpow2(binned_data.size)  # length of the transform
+    # power of two for ease of calculation
 
-    # To give a zero value to the first components, due to FFT
-    k = 100
-    for i in np.arange(0, k, 1):
-        Y[i] = 0
+    freq_raw = np.fft.fft(a=binned_data, n=NFFT)  # Computed FFT
+    freq_abs = np.abs(freq_raw[:NFFT // 2 + 1])   # Erasing mirror effect
+    freq_axis = f_step / 2 * np.linspace(0, 1, NFFT // 2 + 1)
 
-    start = int(len(freq_axis) * freq_start * 2 / fs) - 1
-    stop = int(len(freq_axis) * freq_start * 2 / fs * 2)
-    Y_selected = Y[np.arange(start, stop, dtype=int)]
+    # Erasing the first 100 elements from FFT usually they are noisy
+    for i in range(100):
+        freq_abs[i] = 0
+
+    start = freq_axis.size * f_start * 2 // f_step - 1
+    stop = freq_axis.size * f_start * 2 // f_step * 2
 
     # Selection of the index in the freq_axis array
-    index = np.argmax(Y_selected)
+    idx = np.argmax(freq_abs[range(start, stop)])
+    f_est = freq_axis[idx + freq_axis.size * f_start * 2 // f_step]
+    T_est = 1 / f_est
 
-    frequency = freq_axis[index + int(len(freq_axis) * freq_start * 2 / fs)]
-
-    return bin_data, frequency
+    return T_est
 
 
-def folding(time, dt, T_estimated, num_div):
+def folding(time, dt, T, num_div):
     """
-    Folding algorithm using the waterfall diagrams. Time is data in a the .csv
-    file. It is a column vector ``num_div`` is the number of divisions made to
-    the time array (a.k.a. data) or rows in waterfall The period will only be
-    an approximation, needs to be iterated to correct it!
+    Clasical folding algorithm with waterfall (diagram) implementation. The
+    ``time`` array is reshaped respect to a specific period, ``T``, and placed
+    as a waterfall diagram with a number of division of ``num_div`` or ``M``.
+    The number of divisions represents the number of elements in a row (and
+    later it will represent the number of eigenvalues from in a waterfall PCA).
 
     Parameters
     ----------
-    time : `~numpy.ndarray` or list
-        Observed periodicity time with the telescope.
+    time : `~numpy.ndarray`
+        One dimensional time array with certain hidden periodicity, e.g.
+        pulsar period.
     dt : `float`
-        Bintime.
-    T_estimated : `float`
-        Estimated period or staring period.
+        Binned time.
+    T : `float`
+        Period used to compute the waterfall matrix, :math:`N \times M`. ``N``
+        is strictly dependent on the period and the binned time used.
     num_div : `int`
-        Number of divisions made to the time array or rows in waterfall
-        diagram. Later defined as M. It is also the number of eigenvectors.
-    plot_check : `bool`
-        If `True` will plot.
+        Number of divisions made to the time array, which corresponds to the
+        number of elements in a row of the waterfall matrix.
 
     Returns
     -------
     lc : `~numpy.ndarray`
-        Light curve of the input period. It is a one column array.
+        Light-curve from the time array, ``time``, given an input period,
+        ``T``.
     waterfall : `~numpy.ndarray`
-        Matrix that contains an amount of num_div rows. The number of columns
-        is N.
+        :math:`N \times M`. ``N`` matrix (two dimensional array). The
+        waterfall matrix depends on the four inputs from the `pypfac.folding`
+        function. i.e. ``time``, ``dt``, ``T``, ``num_div``.
     """
 
-    if T_estimated < dt:
-        print('WARNING: Period cannot be smaller than bin size (dt)')
+    if T < dt:
+        raise TypeError('Period (T) cannot be smaller than binned time (dt)')
 
-    # Length light-curve. It needs to be a division with no modulus
-    # N represents the columns in the waterfall
-    # It has to be chosen the int value over the approximation
-    M = num_div
-    N = round(T_estimated / dt)
+    # Light-curven needs to have a division with no modulus
+    M = num_div        # M for ease of notation
+    N = round(T / dt)  # It will only select the integer value
 
-    # Period array with dt_int step and N + 1 elements
-    T = np.linspace(0, T_estimated, N + 1)
+    # Recalculating period with a (N + 1) step
+    T_folding = np.linspace(0, T, N + 1)
 
     # number of samples that will be considered for each row of the waterfall
     ns = time.size // M
 
-    # Modulus divions left. Return element-wise remainder of division
-    remainder = time % T_estimated
+    # Modulus from division, it returns an element-wise remainder
+    remainder = time % T_folding
 
-    lc = np.histogram(remainder, T)[0]  # light-curve
+    lc = np.histogram(remainder, T_folding)[0]  # light-curve
 
     w = []
     for line in range(M):
         # selection of each M in time array
         indices = range(ns * line, ns * (line + 1))
-        # matrix that contains info for waterfall diagram
-        w.append(np.histogram(remainder[indices], bins=T)[0])
+        w.append(np.histogram(remainder[indices], bins=T_folding)[0])
     waterfall = np.array(w)
 
     return lc, waterfall
@@ -232,7 +228,7 @@ def pca(waterfall):
     # Sorting the eigenvalues and vectors
     EVal_sorted = np.sort(EVal.real)[::-1]             # eigenvalues
     EVec_sorted = EVec[:, np.argsort(EVal.real)[::-1]]  # eigenvectors or PCs
-    K = np.dot(EVec_sorted.T, norm)                # information (signal) matrix
+    K = np.dot(EVec_sorted.T, norm)             # information (signal) matrix
 
     return EVal_sorted, EVec_sorted, K
 
@@ -289,7 +285,7 @@ def delta_finder(T_init, iteration, delta, time, dt, num_div, merit_func):
 
     for i in range(iteration):
         waterfall = folding(
-            time=time, dt=dt, T_estimated=T_iterated, num_div=M
+            time=time, dt=dt, T=T_iterated, num_div=M
             )[1]
 
         EVal, EVec, K = pca(waterfall=waterfall)
@@ -311,9 +307,9 @@ def delta_finder(T_init, iteration, delta, time, dt, num_div, merit_func):
 
     idx_max = flat_region_finder(merit)
 
-    T_estimated = T_init - iteration / 2 * delta + idx_max * delta
+    T_est = T_init - iteration / 2 * delta + idx_max * delta
 
-    return T_estimated, EValw, Sw, merit, idx_max
+    return T_est, EValw, Sw, merit, idx_max
 
 
 def find_period(
