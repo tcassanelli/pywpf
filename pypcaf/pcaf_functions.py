@@ -6,13 +6,13 @@ import numpy as np
 
 __all__ = [
     'nextpow2', 'flat_region_finder', 'pre_analysis', 'folding', 'pca',
-    'delta_finder', 'find_period'
+    'find_period', 'find_period2'
     ]
 
 
 def nextpow2(n):
     """
-    Use nextpow2 to pad the signal you pass to FFT.
+    Use `pypcaf.nextpow2` to pad the signal you pass to FFT.
 
     Parameters
     ----------
@@ -46,7 +46,8 @@ def flat_region_finder(X, n=3):
     Returns
     -------
     idx_max : `int`
-        Index or position in the ``X`` array where the maximum of a plateau of length ``n`` is located.
+        Index or position in the ``X`` array where the maximum of a plateau of
+        length ``n`` is located.
     """
 
     flat_region = [sum(X[i:i + n]) for i in range(X.size - n + 1)]
@@ -69,7 +70,8 @@ def pre_analysis(time, dt, T_init):
     Parameters
     ----------
     time : `~numpy.ndarray`
-        One dimensional time array with certain hidden periodicity, e.g. pulsar period.
+        One dimensional time array with certain hidden periodicity, e.g.
+        pulsar period.
     dt : `float`
         Binned time.
     T_init : `float`
@@ -148,7 +150,7 @@ def folding(time, dt, T, num_div):
         ``T``.
     waterfall : `~numpy.ndarray`
         :math:`N \times M`. ``N`` matrix (two dimensional array). The
-        waterfall matrix depends on the four inputs from the `pypfac.folding`
+        waterfall matrix depends on the four inputs from the `~pypfac.folding`
         function. i.e. ``time``, ``dt``, ``T``, ``num_div``.
     """
 
@@ -166,7 +168,7 @@ def folding(time, dt, T, num_div):
     ns = time.size // M
 
     # Modulus from division, it returns an element-wise remainder
-    remainder = time % T_folding
+    remainder = time % T
 
     lc = np.histogram(remainder, T_folding)[0]  # light-curve
 
@@ -182,214 +184,230 @@ def folding(time, dt, T, num_div):
 
 def pca(waterfall):
     """
-    Finds PCs, eigenvalues and signal matrix from waterfall M x N matrix.
-    M: rows, number of segments in which the whole adquisition has been
-    divided.
-    N: columns, number of bins in folding period. Number of eigenvalues.
+    It returns the eigenvalues and eigenvectors (PCA) from the covariance
+    matrix of a normalized waterfall array of length, math:`N\time M`. math:`M`
+    represents the number of eigenvalues and eigenvectors.
 
     Parameters
     ----------
     waterfall : `~numpy.ndarray`
-        Matrix that contains an Amount of num_div rows (M). The number of columns is N.
-    plot_check: boolean
-        To decide if it is necesary an eye inspection.
+        Array that contains an Amount of ``num_div`` rows (math:`M`). The
+        number of elements in a column is N (related to the number of
+        iterations in the function `~pypcaf.find_period`). It also is the
+        same output as mentioned in function `~pypcaf.folding`.
 
     Returns
     -------
-    V_sorted : `list`
-        Eigenvalues from the covariance of the normalized waterfall matrix. Means mu = 0 and std = 1.
-        Organized in decreasent order. Also known as variance.
-    PC_sorted : `~numpy.ndarray`
-        Unitary eigenvectors from the covariance of the normalized waterfall matrix that correspond to each
-        eigenvalue. Sorted in the same way as the V_sorted list. One column, PC_sorted[:, i] represents one PC.
-    cov : `~numpy.ndarray`
-        Covariance of the normalized waterfall matrix.
-    norm : `~numpy.ndarray`
-        Normalization of the waterfall matrix. This is done for each row, (x - <x>)/std(x).
-    signal : `~numpy.ndarray`
-        Is the transposed PC_sorted times the normalized waterfall matrix.
+    EVal_sorted : `~numpy.ndarray`
+        Eigenvalues from the covariance matrix, it is always one dimensional
+        array. It has also been sorted, in such a way that their values are
+        from maximum to minimum. Since the waterfall matrix has been
+        normalized their values are of mean equals zero and std 1.
+    EVec_sorted : `~numpy.ndarray`
+        Eigenvectors from the covariance matrix, it is a multidimensional
+        array, and it depends on the number of dimensions of the waterfall
+        array. Their values have been sorted in the same way as the ones from
+        the eigenvalues, ``EVal_sorted``, viz. their correspondent eigenvalue
+        and eigenvector are in the same position in each array.
+    K : `~numpy.ndarray`
+        Signal matrix, one of the outputs from the PCA analysis. It is
+        currently not been used in the `pypcaf` main core. It represents the
+        transposed ``EVec_sorted`` times the normalized waterfall matrix.
     """
 
-    M, N = waterfall.shape  # This should be the waterfall matrix
-    mean = np.mean(waterfall, axis=1).reshape(M, 1)
+    M, N = waterfall.shape
 
-    # carful, different in matlab!
+    mean = np.mean(waterfall, axis=1).reshape(M, 1)
     std = np.std(waterfall, axis=1, ddof=1).reshape(M, 1)
 
     # Normalization waterfall matrix to mean=0 and std=1
-    norm = (waterfall - mean) / std  # (x - <x>)/std(x)
-    # Covariance matrix
-    cov = 1 / (N - 1) * np.dot(norm, norm.T)
+    norm = (waterfall - mean) / std           # (x - <x>) / std(x)
+    cov = 1 / (N - 1) * np.dot(norm, norm.T)  # Covariance matrix
 
-    # Eigenvalue, Eigenvector
-    # PC[:, i] is the eigenvector corresponding to V[i] eigenvalue
+    # EVec[:, i] is the eigenvector corresponding to EVal[i] eigenvalue
     EVal, EVec = np.linalg.eig(cov)
 
     # Sorting the eigenvalues and vectors
-    EVal_sorted = np.sort(EVal.real)[::-1]             # eigenvalues
+    EVal_sorted = np.sort(EVal.real)[::-1]              # eigenvalues
     EVec_sorted = EVec[:, np.argsort(EVal.real)[::-1]]  # eigenvectors or PCs
-    K = np.dot(EVec_sorted.T, norm)             # information (signal) matrix
+    K = np.dot(EVec_sorted.T, norm)                     # signal matrix
 
     return EVal_sorted, EVec_sorted, K
 
 
-def delta_finder(T_init, iteration, delta, time, dt, num_div, merit_func):
+def find_period(
+    time, dt, T_init, iteration, delta, num_div, merit_func, region_finder
+        ):
     """
-    Finds the best period given an initial starting point, a number of iteration and a step to look for.
-    It is the most inportant function which define the method of selection and the merit function of the script!
+    Finds the best period given an initial starting point, ``T_init``, and
+    ``iteration`` and an increase step in every iteration, ``delta``.It also
+    computes the merit function, derived from the eigenvalues and
+    eigenvectors in `~pypcaf.pca` function.
 
     Parameters
     ----------
-    period : float
-        Estimated period or staring period.
-    iteration : int
-        Interger number to iterate the main function loop.
-    delta : float
-        Increase of the period in each iteration. The orther of it is between 1e-7 - 4e-9.
-    time : `~numpy.ndarray` or list
-        Observed periodicity time with the telescope.
-    dt : float
-        Bintime.
-    num_div : int
-        Number of divisions made to the time array or rows in waterfall diagram. Later defined as M. It is
-        also the number of eigenvectors.
+    time : `~numpy.ndarray`
+        One dimensional time array with certain hidden periodicity, e.g.
+        pulsar period.
+    dt : `float`
+        Binned time.
+    T_init : `float`
+        Initial period to start looking for a best estimate, ``T_est``.
+    iteration : `int`
+        Number of iterations in which a ``delta`` increase will be applied.
+        The initial period, ``T_init``, is the center point.
+    delta : `float`
+        Increase of the period in each iteration. The recommended order of it
+        is between ``1e-7`` and ``1e-8``.
+    num_div : `int`
+        Number of divisions made to the time array, which corresponds to the
+        number of elements in a row of the waterfall matrix.
+    merit_func : `function`
+        It computes the merit function from eigenvalues and scalar arrays.
+        Both of them should be a one dimensional array.
+    region_finder : `bool`
+        If `True`, then it will compute the position of the maximum value in
+        the merirt function using `~pypcaf.flat_region_finder`. If `False` it
+        will select the maximum and its position.
 
     Returns
     -------
-    period_final : float
-        Optimum period of the iteration.
-    V_array : `~numpy.ndarray`
-        Values of all the eigenvalues, expressed as a np.array. i. e. V_array[:, 0] contains all the
-        eigenvalues of the first position, or maximum eigenvalue. It has a length of the number of iteration.
-    S_array : `~numpy.ndarray`
-        Values of the first three scalars, expressed as a nu.array. i. e. S_array[:, 0] contains all the
-        scalars of the first position. It has a length of the number of iteration. It is computed from the
-        result of the hyperdimensional unitary vector times the eigenvalues (dot product), then the maximum
-        absolute value per iteration is chosen.
-    mstev : `~numpy.ndarray`
-        Maximum scalar times the (selected) eigenvalue. It is the merit function selected to choose the right
-        iteration. Represents the maximum scalar in a row (or in one iteration) minus the average of all the rest
-        in the same interation. Then is multiplicated by the associated eigenvalue from the maximum scalar selected.
-    max_idx : int
-        For each iteration a step is added to the final period, this number of steps selected is the maximum index.
-        Notice that the period search starts from (period - iteration / 2 * delta).
+    T_est : `float`
+        Estimated period from the iteration. The period corresponds to
+        ``T_est = T_init - iteration / 2 * delta + idx_max * delta``.
+    EValw : `~numpy.ndarray`
+        Set of eigenvalues of math:`N` length, i.e. the number of
+        iterations, ``iteration``. EValw[:, 0] represents all iteration for the
+        first eigenvalue.
+    Sw : `~numpy.ndarray`
+        Set of scalars of math:`N` length, i.e. the number of
+        iterations, ``iteration``. The scalar value is the projection of each
+        for the eigenvectors into the hyper-diagonal unitary vector. In other
+        words, the dot product of the (absolute value) eigenvector times the
+        same dimension unitary vector. Sw[:, 0] represents all iteration for
+        the first eigenvector.
+    merit : `~numpy.ndarray`
+        Output from the evaluation of ``merit_func``.
+    idx_max : `int`
+        Position of the maximum value in the merit function (it can also be
+        selected by `pypcaf.flat_region_finder`). This index is then used to
+        compute the estimated period from the selected ``iteration``.
     """
-    # makes an interval from central period, [period - i/2 * delta, period + i/2 * delta]
 
     M = num_div
     T_iterated = T_init - iteration / 2 * delta
 
     eigenvalues = []
-    scalar = []  # Scalar matrix
-    u = np.ones((M, 1)) / np.sqrt(M)  # hyperdiagonal unitary vector
+    scalar = []
+    u = np.ones((M, 1)) / np.sqrt(M)  # hyper-diagonal unitary vector
 
     for i in range(iteration):
-        waterfall = folding(
-            time=time, dt=dt, T=T_iterated, num_div=M
-            )[1]
-
+        # Computing a new waterfall for every iteration
+        waterfall = folding(time=time, dt=dt, T=T_iterated, num_div=M)[1]
         EVal, EVec, K = pca(waterfall=waterfall)
 
-        # It is a vector with scalar_to_save = [s0, s1, s2, ...] for the num_div value
+        # Storing data for each iteration
         scalar.append(np.sum(EVec * u, axis=0))
-        # Both values are in decreasing order
-
         eigenvalues.append(EVal)
 
         T_iterated += delta
 
     # scalar and eigenvalues from waterfall N x M matrix
-    Sw = np.abs(scalar)  # Sw[:, 0] represents all iteration for the first eigenvector
-
-    EValw = np.array(eigenvalues)  # EValw[:, 0] represents all iteration for the first eigenvalue
+    # Sw[:, 0] all iterations for the first scalar
+    Sw = np.abs(scalar)
+    # EValw[:, 0] all iterations for the first eigenvalue
+    EValw = np.array(eigenvalues)
 
     merit = merit_func(EValw=EValw, Sw=Sw)
 
-    idx_max = flat_region_finder(merit)
+    if region_finder:
+        idx_max = flat_region_finder(merit)
+    else:
+        idx_max = np.argmax(merit)
 
     T_est = T_init - iteration / 2 * delta + idx_max * delta
 
     return T_est, EValw, Sw, merit, idx_max
 
 
-def find_period(
-    time, T_init, dt, num_div, iteration1, delta1, iteration2, delta2, merit_func
+def find_period2(
+    time, dt, T_init, num_div, iterations, deltas, merit_func, region_finder
         ):
     """
-    Finds the optimal period using PCA. Encapsulates two iteration in one.
+    Wrapper function for `~pypcaf.find_period`. It computes two loops of the
+    wrapped function, using the first estimated period, ``T_est1``, as initial
+    period for the second iteration.
 
     Parameters
     ----------
-    time : `~numpy.ndarray` or list
-        Observed periodicity time with the telescope.
-    period : float
-        Estimated period or staring period.
-    dt : float
-        Bintime.
-    num_div : int
-        Number of divisions made to the time array or rows in waterfall diagram. Later defined as M. It is
-        also the number of eigenvectors.
-    iteration1 : int
-        Interger number to iterate the delta_finder function. Usually with a value of 100.
-    delta1 : float
-        Increase of the period in each iteration1. The orther of it is between 1e-7.
-    iteration2 : int
-        Interger number to iterate the delta_finder function. Usually with a value of 500.
-    delta2 : float
-        Increase of the period in each iteration2. The orther of it is between 4e-9.
-    noisy_signal : boolean
-        If True the first iteration will be made using the function pre_analysis which looks for the
-        best FFT frequency.
+    time : `~numpy.ndarray`
+        One dimensional time array with certain hidden periodicity, e.g.
+        pulsar period.
+    dt : `float`
+        Binned time.
+    T_init : `float`
+        Initial period to start looking for a best estimate, ``T_est``.
+    iterations : `list`
+        Corresponds to ``[iteration1, iteration2]``.
+    deltas : `float`
+        Corresponds to ``[delta1, delta2]``
+    num_div : `int`
+        Number of divisions made to the time array, which corresponds to the
+        number of elements in a row of the waterfall matrix.
+    merit_func : `function`
+        It computes the merit function from eigenvalues and scalar arrays.
+        Both of them should be a one dimensional array.
+    region_finder : `bool`
+        If `True`, then it will compute the position of the maximum value in
+        the merirt function using `~pypcaf.flat_region_finder`. If `False` it
+        will select the maximum and its position.
 
     Returns
     -------
-    1/freq : float
-        Initial given period of search. Check in literature of every object to find a good start.
-    period_start1 : float
-        Initial period of search in the case of a noisy signal. It first looks for the FFT.
-    period_final1, 2 : float
-        Best period from the first and second iteration. The starting period of the second iteration
-        corresponds to period_final2.
-    var_iteration1, 2 : `~numpy.ndarray`
-        See V_array in delta_finder function. 1 and 2 for first and second iteration.
-    scalar_iteration1, 2 : `~numpy.ndarray`
-        See S_array in delta_finder function. 1 and 2 for first and second iteration.
-    mstev_iteration1, 2 : `~numpy.ndarray`
-        See mstev in delta_finder function. 1 and 2 for first and second iteration.
-    max_index1,, 2 : int
-        See max_idx in delta_finder function. 1 and 2 for first and second iteration.
+    T : `list`
+        Contains the given initial period, ``T_init``, the estimated period in
+        the first loop, ``T_est1`` and the estimated period in the second
+        loop, ``T_est2``.
+    EValwi : `~numpy.ndarray`
+        Set of eigenvalues of math:`N` length, i.e. the number of
+        iterations, ``iteration``.
+    Swi : `~numpy.ndarray`
+        Set of scalars of math:`N` length, i.e. the number of
+        iterations, ``iteration``. The scalar value is the projection of each
+        for the eigenvectors into the hyper-diagonal unitary vector. In other
+        words, the dot product of the (absolute value) eigenvector times the
+        same dimension unitary vector.
+    meriti : `~numpy.ndarray`
+        Output from the evaluation of ``merit_func``.
+    idxi_max : `int`
+        Position of the maximum value in the merit function (it can also be
+        selected by `pypcaf.flat_region_finder`). This index is then used to
+        compute the estimated period from the selected ``iteration``.
     """
 
-    # if noisy_signal:
-    #     period_start1 = period
-    # else:
-    #     freq_start = pre_analysis(time, dt, period)[1]
-    #     period_start1 = 1 / freq_start
-
-    (
-        T_est1, EValw1, Sw1, M1, idx1_max
-        ) = delta_finder(
-        T_init=T_init,
-        iteration=iteration1,
-        delta=delta1,
+    T_est1, EValw1, Sw1, merit1, idx1_max = find_period(
         time=time,
         dt=dt,
+        T_init=T_init,
+        iteration=iterations[0],
+        delta=deltas[0],
         num_div=num_div,
-        merit_func=merit_func
+        merit_func=merit_func,
+        region_finder=region_finder
         )
 
-    (
-        T_est2, EValw2, Sw2, M2, idx2_max
-        ) = delta_finder(
-        T_init=T_est1,
-        iteration=iteration2,
-        delta=delta2,
+    T_est2, EValw2, Sw2, merit2, idx2_max = find_period(
         time=time,
         dt=dt,
+        T_init=T_est1,
+        iteration=iterations[1],
+        delta=deltas[1],
         num_div=num_div,
-        merit_func=merit_func
+        merit_func=merit_func,
+        region_finder=region_finder
         )
 
     T = [T_init, T_est1, T_est2]
 
-    return T, [idx1_max, idx2_max], [EValw1, EValw2], [Sw1, Sw2], [M1, M2]
+    return T, [EValw1, EValw2], [Sw1, Sw2], [merit1, merit2], [
+        idx1_max, idx2_max]

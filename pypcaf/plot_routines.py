@@ -5,6 +5,7 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import colors
 from astropy.io import ascii
 from scipy.constants import golden
 
@@ -52,16 +53,18 @@ def plot_lc(lc, N, T):
     return fig
 
 
-def plot_period(pcaf_path, num_div, T_ref=None):
+def plot_period(pypcaf_path, num_div, T_ref=None):
 
-    pcaf_info = os.path.join(pcaf_path, 'pcaf_info.dat')
-    pcaf_out = os.path.join(pcaf_path, 'pcaf_out_M{}.npz'.format(num_div))
-    info = ascii.read(pcaf_info)
+    pypcaf_info = os.path.join(pypcaf_path, 'info.dat')
+    pypcaf_out = os.path.join(
+        pypcaf_path, 'M{}.npz'.format(num_div)
+        )
+    info = ascii.read(pypcaf_info)
 
     # index relative to the num_div
     idx = np.where(info['num_div'] == num_div)[0][0]
 
-    data = np.load(pcaf_out)
+    data = np.load(pypcaf_out)
 
     time_x1 = np.linspace(
         info['T_init'][idx] - info['delta1'][idx] * info['iter1'][idx] / 2,
@@ -154,13 +157,19 @@ def plot_period(pcaf_path, num_div, T_ref=None):
         for _ax in ax:
             _ax.axvline(
                 x=T_ref,
-                color='c',
+                color='dimgray',
+                label='$T_\\mathrm{ref}$',
+                linewidth=.8
+                )
+            _ax.axvline(
+                x=info['T_init'][idx],
+                color='darkorange',
                 label='$T_\\mathrm{ref}$',
                 linewidth=.8
                 )
 
     # Titles
-    name = os.path.split(pcaf_path)[1]
+    name = os.path.split(pypcaf_path)[1]
     ax[0].set_title(
         name + ' first iteration. $T_\\mathrm{est1}=' +
         str(info['T_est1'][idx]) + '$ s, $dt=' + str(info['dt'][idx]) +
@@ -183,21 +192,17 @@ def plot_period(pcaf_path, num_div, T_ref=None):
     return fig
 
 
-def plot_all_periods(pcaf_path, T_ref=None):
+def plot_all_periods(pypcaf_path, T_ref=None):
 
-    pcaf_info = os.path.join(pcaf_path, 'pcaf_info.dat')
-    info = ascii.read(pcaf_info)
+    pypcaf_info = os.path.join(pypcaf_path, '\info.dat')
+    info = ascii.read(pypcaf_info)
     num_div = info['num_div']
 
-    print('\n ... Making plots for all periods ... \n')
-    print(info)
-    print('\n')
-
-    path_plot = os.path.join(pcaf_path, 'plots')
+    path_plot = os.path.join(pypcaf_path, 'plots')
     if not os.path.exists(path_plot):
         os.makedirs(path_plot)
 
     # Iteration over all number of divisions in waterfall (M)
     for M in num_div:
-        fig = plot_period(pcaf_path=pcaf_path, num_div=int(M), T_ref=T_ref)
-        fig.savefig(os.path.join(path_plot, 'pcaf_M{}.pdf'.format(int(M))))
+        fig = plot_period(pypcaf_path=pypcaf_path, num_div=int(M), T_ref=T_ref)
+        fig.savefig(os.path.join(path_plot, 'M{}.pdf'.format(int(M))))
