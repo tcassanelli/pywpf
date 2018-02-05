@@ -1,4 +1,15 @@
-.DS_Store
+# Packaging
 build
 dist
-pypcaf.egg-info
+pypcaf.egg-info/
+.cache/
+.eggs/*
+
+# Max OS
+.DS_Store
+
+# Notebooks
+.ipynb_checkpoints
+
+# Scripts
+scripts/pypcaf_out/*

@@ -7,7 +7,7 @@ import time as TIME
 import numpy as np
 from astropy.io import ascii
 from astropy.table import Table
-from .pcaf_functions import find_period
+from .pcaf_functions import find_period2
 
 __all__ = ['pcaf']
 
@@ -19,7 +19,7 @@ def pcaf(
     """
     Core functionfor the `~pypcaf` package. It computes two estimated periods
     given an inital period and a time array (one dimenional), with its
-    corresponent binned time.
+    corresponent time bin.
 
     Parameters
     ----------
@@ -28,7 +28,7 @@ def pcaf(
         e.g. .csv, .txt, ext. It can also be a python binary file .npy. In any
         case it must be always a one dimensional array.
     dt : `float`
-        Binned time.
+        time bin.
     T_init : `float`
         Initial period to start looking for a best estimate, ``T_est``.
     iterations : `list`
@@ -60,6 +60,12 @@ def pcaf(
     start_time = TIME.time()
 
     print('\n ******* PyPCAF: finding pulsar period ******* \n')
+
+    if not all(num_div[i] <= num_div[i + 1] for i in range(len(num_div) - 1)):
+        raise TypeError('num_div has to be sorted')
+
+    if not num_div[0] >= 3:
+        raise TypeError('num_div has to be equal greater than 3')
 
     num_div = np.array(num_div)
     print('... Total number of num_div loops: {} ... \n'.format(num_div.size))
@@ -94,11 +100,11 @@ def pcaf(
         i_loops += 1
 
         if use_previous and i != 0:
-            T_init = pypcaf_info['T_est2'][i]
+            T_init = pypcaf_info['T_est2'][i - 1]
         else:
             pass
 
-        T, EValw, Sw, Merit, idx_max = find_period(
+        T, EValw, Sw, Merit, idx_max = find_period2(
             time=time,
             dt=dt,
             T_init=T_init,

@@ -18,7 +18,9 @@ setup(
         'astropy>=1.1',
         'matplotlib>=2.0',
         'cython'
-    ],
+        ],
+    setup_requires=['pytest-runner'],  # Enables tests
+    tests_require=['pytest'],
     # ext_modules=cythonize("pypcaf/pcaf_functions.pyx"),
     packages=['pypcaf'],
     package_dir={

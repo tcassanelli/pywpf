@@ -35,9 +35,9 @@ def merit1(EValw, Sw):
         eigenvalue.
     """
 
-    Sw_argmax = np.argmax(Sw, axis=1)
-    EValw_corr = EValw[range(Sw_argmax.size), Sw_argmax]
-    Sw_max = np.max(Sw, axis=1)
+    sorted_positions = np.argmax(Sw, axis=1)
+    Sw_max = Sw[range(sorted_positions.size), sorted_positions]
+    EValw_corr = EValw[range(sorted_positions.size), sorted_positions]
     merit = Sw_max * EValw_corr
 
     return merit

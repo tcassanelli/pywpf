@@ -19,7 +19,7 @@ plt.style.use(os.path.join(plotstyle_dir, 'pypcaf_sty.mplstyle'))
 
 def plot_waterfall(waterfall, T):
 
-    dt = T[1] - T[0]
+    dt = T[1] - T[0]  # time bin
     M, N = waterfall.shape
 
     fig, ax = plt.subplots()
@@ -134,6 +134,12 @@ def plot_period(pypcaf_path, num_div, T_ref=None):
 
     # Virtical lines: T_est
     ax[0].axvline(
+        x=info['T_init'][idx],
+        color='darkorange',
+        label='$T_\\mathrm{init}$',
+        linewidth=.8
+        )
+    ax[0].axvline(
         x=info['T_est1'][idx],
         color='y',
         label='$T_\\mathrm{est1}$',
@@ -158,12 +164,6 @@ def plot_period(pypcaf_path, num_div, T_ref=None):
             _ax.axvline(
                 x=T_ref,
                 color='dimgray',
-                label='$T_\\mathrm{ref}$',
-                linewidth=.8
-                )
-            _ax.axvline(
-                x=info['T_init'][idx],
-                color='darkorange',
                 label='$T_\\mathrm{ref}$',
                 linewidth=.8
                 )
@@ -194,7 +194,7 @@ def plot_period(pypcaf_path, num_div, T_ref=None):
 
 def plot_all_periods(pypcaf_path, T_ref=None):
 
-    pypcaf_info = os.path.join(pypcaf_path, '\info.dat')
+    pypcaf_info = os.path.join(pypcaf_path, 'info.dat')
     info = ascii.read(pypcaf_info)
     num_div = info['num_div']
 

@@ -73,7 +73,7 @@ def pre_analysis(time, dt, T_init):
         One dimensional time array with certain hidden periodicity, e.g.
         pulsar period.
     dt : `float`
-        Binned time.
+        time bin.
     T_init : `float`
         Initial period.
 
@@ -85,7 +85,7 @@ def pre_analysis(time, dt, T_init):
 
     if T_init < dt:
         raise TypeError(
-            'Initial period (T_init) cannot be smaller than binned time (dt)'
+            'Initial period (T_init) cannot be smaller than time bin (dt)'
             )
 
     f_start = 1 / T_init  # starting frequency
@@ -96,13 +96,13 @@ def pre_analysis(time, dt, T_init):
 
     # counts the number of values in the time array that are within each
     # specified bin range, time_x
-    binned_data = np.histogram(time, bins=time_x)[0]
+    data_bin = np.histogram(time, bins=time_x)[0]
 
     f_step = 1 / dt  # frequency step
-    NFFT = 2 ** nextpow2(binned_data.size)  # length of the transform
+    NFFT = 2 ** nextpow2(data_bin.size)  # length of the transform
     # power of two for ease of calculation
 
-    freq_raw = np.fft.fft(a=binned_data, n=NFFT)  # Computed FFT
+    freq_raw = np.fft.fft(a=data_bin, n=NFFT)     # Computed FFT
     freq_abs = np.abs(freq_raw[:NFFT // 2 + 1])   # Erasing mirror effect
     freq_axis = f_step / 2 * np.linspace(0, 1, NFFT // 2 + 1)
 
@@ -123,7 +123,7 @@ def pre_analysis(time, dt, T_init):
 
 def folding(time, dt, T, num_div):
     """
-    Clasical folding algorithm with waterfall (diagram) implementation. The
+    Classical folding algorithm with waterfall (diagram) implementation. The
     ``time`` array is reshaped respect to a specific period, ``T``, and placed
     as a waterfall diagram with a number of division of ``num_div`` or ``M``.
     The number of divisions represents the number of elements in a row (and
@@ -135,10 +135,10 @@ def folding(time, dt, T, num_div):
         One dimensional time array with certain hidden periodicity, e.g.
         pulsar period.
     dt : `float`
-        Binned time.
+        time bin.
     T : `float`
         Period used to compute the waterfall matrix, :math:`N \times M`. ``N``
-        is strictly dependent on the period and the binned time used.
+        is strictly dependent on the period and the time bin used.
     num_div : `int`
         Number of divisions made to the time array, which corresponds to the
         number of elements in a row of the waterfall matrix.
@@ -155,9 +155,9 @@ def folding(time, dt, T, num_div):
     """
 
     if T < dt:
-        raise TypeError('Period (T) cannot be smaller than binned time (dt)')
+        raise TypeError('Period (T) cannot be smaller than time bin (dt)')
 
-    # Light-curven needs to have a division with no modulus
+    # Light-curve needs to have a division with no modulus
     M = num_div        # M for ease of notation
     N = round(T / dt)  # It will only select the integer value
 
@@ -170,8 +170,6 @@ def folding(time, dt, T, num_div):
     # Modulus from division, it returns an element-wise remainder
     remainder = time % T
 
-    lc = np.histogram(remainder, T_folding)[0]  # light-curve
-
     w = []
     for line in range(M):
         # selection of each M in time array
@@ -179,10 +177,14 @@ def folding(time, dt, T, num_div):
         w.append(np.histogram(remainder[indices], bins=T_folding)[0])
     waterfall = np.array(w)
 
-    return lc, waterfall
+    return remainder, waterfall
 
 
-def pca(waterfall):
+def light_curve(remainder, T_folding):
+    return np.histogram(remainder, T_folding)[0]
+
+
+def pca(waterfall, signal=False):
     """
     It returns the eigenvalues and eigenvectors (PCA) from the covariance
     matrix of a normalized waterfall array of length, math:`N\time M`. math:`M`
@@ -213,6 +215,8 @@ def pca(waterfall):
         Signal matrix, one of the outputs from the PCA analysis. It is
         currently not been used in the `pypcaf` main core. It represents the
         transposed ``EVec_sorted`` times the normalized waterfall matrix.
+    signal : `bool`
+        If `True` it will compute the signal matrix.
     """
 
     M, N = waterfall.shape
@@ -228,9 +232,15 @@ def pca(waterfall):
     EVal, EVec = np.linalg.eig(cov)
 
     # Sorting the eigenvalues and vectors
-    EVal_sorted = np.sort(EVal.real)[::-1]              # eigenvalues
-    EVec_sorted = EVec[:, np.argsort(EVal.real)[::-1]]  # eigenvectors or PCs
-    K = np.dot(EVec_sorted.T, norm)                     # signal matrix
+    sorted_positions = np.argsort(EVal.real)[::-1]
+    EVal_sorted = EVal[sorted_positions]           # eigenvalues
+    EVec_sorted = EVec[:, sorted_positions]        # eigenvectors or PCs
+
+    # Perhaps add it in a different function
+    if signal:
+        K = np.dot(EVec_sorted.T, norm)            # signal matrix
+    else:
+        K = None
 
     return EVal_sorted, EVec_sorted, K
 
@@ -250,7 +260,7 @@ def find_period(
         One dimensional time array with certain hidden periodicity, e.g.
         pulsar period.
     dt : `float`
-        Binned time.
+        time bin.
     T_init : `float`
         Initial period to start looking for a best estimate, ``T_est``.
     iteration : `int`
@@ -344,7 +354,7 @@ def find_period2(
         One dimensional time array with certain hidden periodicity, e.g.
         pulsar period.
     dt : `float`
-        Binned time.
+        time bin.
     T_init : `float`
         Initial period to start looking for a best estimate, ``T_est``.
     iterations : `list`
