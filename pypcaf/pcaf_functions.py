@@ -41,7 +41,8 @@ def flat_region_finder(X, n=3):
     X : `~numpy.ndarray`
         One dimensional array where the maximum needs to be found.
     n : `int`
-        Number of points in the plateau region.
+        Number of points in the plateau region. It is also named
+        ``region_order``.
 
     Returns
     -------
@@ -119,6 +120,42 @@ def pre_analysis(time, dt, T_init):
     T_est = 1 / f_est
 
     return T_est
+
+
+def rms_value(X):
+    """
+    Computes the root-mean-square value for an array.
+
+    Parameters
+    ----------
+    X : `~numpy.ndarray`
+        One or two dimensional array.
+    """
+
+    return np.sqrt(X.dot(X) / X.size)
+
+
+# Still working on this!
+def CP_value(merit, Sw1, idx_max, tol=0.75):
+    """
+    Global value signal-to-noise, named Confidence Paramerter (PC). Quantifies
+    the goodness fo a merit function after the PCA-Folding has been executed.
+    """
+
+    idx_p = idx_max + 1
+    idx_m = idx_max - 1
+
+    while Sw1[idx_p] >= tol:
+        idx_p += 1
+
+    while Sw1[idx_m] >= tol:
+        idx_m -= 1
+
+    X = np.hstack((merit[0:idx_m], merit[idx_p:-1]))
+
+    CP = (merit.max() ** 2 - np.average(X) ** 2) / rms_value(X)
+
+    return CP
 
 
 def folding(time, dt, T, num_div):
@@ -246,7 +283,8 @@ def pca(waterfall, signal=False):
 
 
 def find_period(
-    time, dt, T_init, iteration, delta, num_div, merit_func, region_finder
+    time, dt, T_init, iteration, delta, num_div, merit_func,
+    region_order
         ):
     """
     Finds the best period given an initial starting point, ``T_init``, and
@@ -275,10 +313,12 @@ def find_period(
     merit_func : `function`
         It computes the merit function from eigenvalues and scalar arrays.
         Both of them should be a one dimensional array.
-    region_finder : `bool`
-        If `True`, then it will compute the position of the maximum value in
-        the merirt function using `~pypcaf.flat_region_finder`. If `False` it
-        will select the maximum and its position.
+    region_order : `int`
+        It makes use of the `~pypcaf.flat_region_finder` to search for the
+        maximum in the selected merit function. If ``region_order = 1``,
+        it will compute the ordinary maximum of the merit array, i.e.
+        ``np.max(merit)``. This function defines the estimated period after
+        one ``iteration``.
 
     Returns
     -------
@@ -299,9 +339,10 @@ def find_period(
     merit : `~numpy.ndarray`
         Output from the evaluation of ``merit_func``.
     idx_max : `int`
-        Position of the maximum value in the merit function (it can also be
-        selected by `pypcaf.flat_region_finder`). This index is then used to
-        compute the estimated period from the selected ``iteration``.
+        Position of the maximum value in the merit function (or maximum in a
+        plateau region, depending on ``region_finder``). This index is
+        then used to compute the estimated period from the selected
+        ``iteration``.
     """
 
     M = num_div
@@ -330,8 +371,8 @@ def find_period(
 
     merit = merit_func(EValw=EValw, Sw=Sw)
 
-    if region_finder:
-        idx_max = flat_region_finder(merit)
+    if region_order > 1:
+        idx_max = flat_region_finder(X=merit, n=region_order)
     else:
         idx_max = np.argmax(merit)
 
@@ -341,7 +382,8 @@ def find_period(
 
 
 def find_period2(
-    time, dt, T_init, num_div, iterations, deltas, merit_func, region_finder
+    time, dt, T_init, num_div, iterations, deltas, merit_func,
+    region_order
         ):
     """
     Wrapper function for `~pypcaf.find_period`. It computes two loops of the
@@ -367,10 +409,12 @@ def find_period2(
     merit_func : `function`
         It computes the merit function from eigenvalues and scalar arrays.
         Both of them should be a one dimensional array.
-    region_finder : `bool`
-        If `True`, then it will compute the position of the maximum value in
-        the merirt function using `~pypcaf.flat_region_finder`. If `False` it
-        will select the maximum and its position.
+    region_order : `int`
+        It makes use of the `~pypcaf.flat_region_finder` to search for the
+        maximum in the selected merit function. If ``region_order = 1``,
+        it will compute the ordinary maximum of the merit array, i.e.
+        ``np.max(merit)``. This function defines the estimated period in both
+        ``iterations``.
 
     Returns
     -------
@@ -390,9 +434,10 @@ def find_period2(
     meriti : `~numpy.ndarray`
         Output from the evaluation of ``merit_func``.
     idxi_max : `int`
-        Position of the maximum value in the merit function (it can also be
-        selected by `pypcaf.flat_region_finder`). This index is then used to
-        compute the estimated period from the selected ``iteration``.
+        Position of the maximum value in the merit function (or maximum in a
+        plateau region, depending on ``region_finder``). This index is
+        then used to compute the estimated period from the selected
+        ``iteration``.
     """
 
     T_est1, EValw1, Sw1, merit1, idx1_max = find_period(
@@ -403,7 +448,7 @@ def find_period2(
         delta=deltas[0],
         num_div=num_div,
         merit_func=merit_func,
-        region_finder=region_finder
+        region_order=region_order
         )
 
     T_est2, EValw2, Sw2, merit2, idx2_max = find_period(
@@ -414,7 +459,7 @@ def find_period2(
         delta=deltas[1],
         num_div=num_div,
         merit_func=merit_func,
-        region_finder=region_finder
+        region_order=region_order
         )
 
     T = [T_init, T_est1, T_est2]

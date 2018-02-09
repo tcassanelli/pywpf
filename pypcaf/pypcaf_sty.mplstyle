@@ -7,8 +7,8 @@
 
 
 # LINES
-lines.linewidth     : 0.8
-lines.markersize    : 3
+lines.linewidth     : 0.6
+lines.markersize    : 2
 
 # TEXT
 text.usetex         : True
