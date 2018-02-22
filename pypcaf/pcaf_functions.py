@@ -3,6 +3,7 @@
 
 # Author: Tomas Cassanelli
 import numpy as np
+from fast_histogram import histogram1d
 
 __all__ = [
     'nextpow2', 'flat_region_finder', 'pre_analysis', 'folding', 'pca',
@@ -217,11 +218,116 @@ def folding(time, dt, T, num_div):
     return remainder, waterfall
 
 
+def folding_try(time, dt, T, num_div):
+
+    if T < dt:
+        raise TypeError('Period (T) cannot be smaller than time bin (dt)')
+
+    # Light-curve needs to have a division with no modulus
+    M = num_div        # M for ease of notation
+    N = round(T / dt)  # It will only select the integer value
+    # Recalculating period with a (N + 1) step
+    # T_folding = np.linspace(0, T * M, N * M + 1)
+
+    # number of samples that will be considered for each row of the waterfall
+    ns = time.size // M
+    T_folding = np.linspace(0, T * M, N * M + 1)
+
+    waterfall = np.histogram(time[:M * ns], T_folding)[0].reshape(M, N)
+
+    return waterfall
+
+
+def folding_try2(time, dt, T, num_div):
+
+    if T < dt:
+        raise TypeError('Period (T) cannot be smaller than time bin (dt)')
+
+    # Light-curve needs to have a division with no modulus
+    M = num_div        # M for ease of notation
+    N = round(T / dt)  # It will only select the integer value
+
+    # Recalculating period with a (N + 1) step
+    T_folding = np.linspace(0, T, N + 1)
+
+    # number of samples that will be considered for each row of the waterfall
+    ns = time.size // M
+
+    # Modulus from division, it returns an element-wise remainder
+    remainder = time % T
+
+    w = np.apply_along_axis(
+        func1d=np.histogram,
+        axis=1,
+        arr=remainder[:M * ns].reshape(M, ns),
+        range=T_folding
+        )[:, 0]
+
+    waterfall = np.concatenate(w, axis=0).reshape(M, N)
+
+    return remainder, waterfall
+
+
+def folding_try3(time, dt, T, num_div):
+
+    if T < dt:
+        raise TypeError('Period (T) cannot be smaller than time bin (dt)')
+
+    # Light-curve needs to have a division with no modulus
+    M = num_div        # M for ease of notation
+    N = round(T / dt)  # It will only select the integer value
+
+    # Recalculating period with a (N + 1) step
+    T_folding = np.linspace(0, T, N + 1)
+
+    # number of samples that will be considered for each row of the waterfall
+    ns = time.size // M
+
+    # Modulus from division, it returns an element-wise remainder
+    remainder = time % T
+
+    w = np.apply_along_axis(
+        func1d=histogram1d,
+        axis=1,
+        arr=remainder[:M * ns].reshape(M, ns),
+        range=[0, T],
+        bins=N
+        )
+
+    waterfall = np.concatenate(w, axis=0).reshape(M, N)
+
+    return remainder, waterfall
+
 def light_curve(remainder, T_folding):
     return np.histogram(remainder, T_folding)[0]
 
 
-def pca(waterfall, signal=False):
+def pca_signal(EVec, waterfall):
+    """
+    Computes the signal or K matrix after the PCA analysis.
+
+    Returns
+    -------
+    K : `~numpy.ndarray`
+        Signal matrix, one of the outputs from the PCA analysis. It is
+        currently not been used in the `pypcaf` main core. It represents the
+        transposed ``EVec_sorted`` times the normalized waterfall matrix.
+    """
+
+    M = waterfall.shape[0]
+
+    mean = np.mean(waterfall, axis=1).reshape(M, 1)
+    std = np.std(waterfall, axis=1, ddof=1).reshape(M, 1)
+
+    # Normalization waterfall matrix to mean=0 and std=1
+    norm = (waterfall - mean) / std
+
+    K = np.dot(EVec.T, norm)
+
+    return K
+
+
+def pca(waterfall):
     """
     It returns the eigenvalues and eigenvectors (PCA) from the covariance
     matrix of a normalized waterfall array of length, math:`N\time M`. math:`M`
@@ -248,10 +354,6 @@ def pca(waterfall, signal=False):
         array. Their values have been sorted in the same way as the ones from
         the eigenvalues, ``EVal_sorted``, viz. their correspondent eigenvalue
         and eigenvector are in the same position in each array.
-    K : `~numpy.ndarray`
-        Signal matrix, one of the outputs from the PCA analysis. It is
-        currently not been used in the `pypcaf` main core. It represents the
-        transposed ``EVec_sorted`` times the normalized waterfall matrix.
     signal : `bool`
         If `True` it will compute the signal matrix.
     """
@@ -268,18 +370,14 @@ def pca(waterfall, signal=False):
     # EVec[:, i] is the eigenvector corresponding to EVal[i] eigenvalue
     EVal, EVec = np.linalg.eig(cov)
 
+    print('EVal.shape: ', EVal.shape)
+
     # Sorting the eigenvalues and vectors
     sorted_positions = np.argsort(EVal.real)[::-1]
     EVal_sorted = EVal[sorted_positions]           # eigenvalues
     EVec_sorted = EVec[:, sorted_positions]        # eigenvectors or PCs
 
-    # Perhaps add it in a different function
-    if signal:
-        K = np.dot(EVec_sorted.T, norm)            # signal matrix
-    else:
-        K = None
-
-    return EVal_sorted, EVec_sorted, K
+    return EVal_sorted, EVec_sorted
 
 
 def find_period(
@@ -355,7 +453,7 @@ def find_period(
     for i in range(iteration):
         # Computing a new waterfall for every iteration
         waterfall = folding(time=time, dt=dt, T=T_iterated, num_div=M)[1]
-        EVal, EVec, K = pca(waterfall=waterfall)
+        EVal, EVec = pca(waterfall=waterfall)
 
         # Storing data for each iteration
         scalar.append(np.sum(EVec * u, axis=0))

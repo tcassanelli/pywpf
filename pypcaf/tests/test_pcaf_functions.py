@@ -3,6 +3,7 @@
 
 # Author: Tomas Cassanelli
 import pytest
+import os
 import numpy as np
 from astropy.utils.misc import NumpyRNGContext
 from numpy.testing import assert_allclose, assert_equal
@@ -10,7 +11,8 @@ import pypcaf
 
 # Plot style added from relative path
 current_dir = os.path.dirname(__file__)
-noise_path = os.path.join(current_dir, 'data', 'noise.npy')
+n0_path = os.path.join(current_dir, 'data', 'n0.npy')
+folding_path = os.path.join(current_dir, 'data', 'folding_true.npz')
 
 
 def test_nextpow2():
@@ -34,12 +36,18 @@ def test_flat_region_finder():
     assert_allclose(idx_max, idx_max_true)
 
 
-# def test_folding():
+# Testing new function
+def test_folding():
 
-#     noise_data = np.load(noise_path)
+    n0 = np.load(n0_path)
+    folding_true = np.load(folding_path)
 
+    remainder, waterfall = pypcaf.folding(
+        time=n0, dt=0.002793, T=0.089367, num_div=20
+        )
 
-#     lc, waterfall =
+    assert_allclose(remainder, folding_true['remainder'])
+    assert_allclose(waterfall, folding_true['waterfall'])
 
 
 

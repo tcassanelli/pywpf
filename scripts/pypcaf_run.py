@@ -14,22 +14,22 @@ import pypcaf
 #     merit_func=pypcaf.merit1,
 #     region_order=3,
 #     use_previous=False,
-#     work_dir=None
+#     work_dir='../../data_pulsar/'
 #     )
 
-# pypcaf.pcaf_single(
-#     time_path='../../data_pulsar/n3000.npy',
-#     dt=0.002793,
-#     T_init=0.089367,
-#     iteration=1000,
-#     delta=1e-8,
-#     num_div=range(30, 31),
-#     merit_func=pypcaf.merit1,
-#     region_order=3,
-#     work_dir=None
-#     )
-
-pypcaf.plot_all_periods(
-    pypcaf_path='pypcaf_out/n3000-001',
-    T_ref=0.08936715
+pypcaf.pcaf_single(
+    time_path='../../data_pulsar/n3000.npy',
+    dt=0.002793,
+    T_init=0.089367,
+    iteration=10,  # 1000
+    delta=1e-8,
+    num_div=range(10, 12),
+    merit_func=pypcaf.merit1,
+    region_order=3,
+    work_dir='../../data_pulsar/'
     )
+
+# pypcaf.plot_all_periods(
+#     pypcaf_path='../../data_pulsar/pypcaf_out/n3000-001',
+#     T_ref=0.08936715
+#     )

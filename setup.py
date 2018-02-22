@@ -3,7 +3,6 @@
 
 # Author: Tomas Cassanelli
 from setuptools import setup
-# from Cython.Build import cythonize
 
 setup(
     name='pypcaf',
@@ -17,19 +16,21 @@ setup(
         'scipy>=0.15',
         'astropy>=1.1',
         'matplotlib>=2.0',
-        'cython'
+        'fast_histogram',
+        # 'cython>=0.26.1'
         ],
     setup_requires=['pytest-runner'],  # Enables tests
     tests_require=['pytest'],
-    # ext_modules=cythonize("pypcaf/pcaf_functions.pyx"),
+    # ext_modules=extensions,
     packages=['pypcaf'],
     package_dir={
         'pypcaf': 'pypcaf',
-        # 'pyoof.submodule': 'pyoof/submodel',
+        # 'pyoof.submodule': 'pypcaf/submodel',
         },
     package_data={
         '': ['pypcaf_sty.mplstyle'],
-        # '': ['config_params.yaml']
+        '': ['tests/data/*.npz'],
+        '': ['tests/data/*.npy']
         },
     long_description='''
     PyPCAF - Principal Componen Analysis (PCA) Folding.
