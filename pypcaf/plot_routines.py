@@ -301,9 +301,9 @@ def plot_all_periods(pypcaf_path, T_ref=None):
     num_div = info['num_div']
 
     # Printing summary
-    print('... Making plots ... \n')
-    info.pprint(max_lines=-1, max_width=-1)
-    print('\n')
+    print('... Plotting PyPCAF results ... \n')
+    # info.pprint(max_lines=-1, max_width=-1)
+    # print('\n')
 
     path_plot = os.path.join(pypcaf_path, 'plots')
     if not os.path.exists(path_plot):
@@ -322,3 +322,4 @@ def plot_all_periods(pypcaf_path, T_ref=None):
             T_ref=T_ref
             )
         fig.savefig(os.path.join(path_plot, 'M{}.pdf'.format(M)))
+        plt.close(fig)

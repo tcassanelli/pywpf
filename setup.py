@@ -27,11 +27,7 @@ setup(
         'pypcaf': 'pypcaf',
         # 'pyoof.submodule': 'pypcaf/submodel',
         },
-    package_data={
-        '': ['pypcaf_sty.mplstyle'],
-        '': ['tests/data/*.npz'],
-        '': ['tests/data/*.npy']
-        },
+    include_package_data=True,
     long_description='''
     PyPCAF - Principal Componen Analysis (PCA) Folding.
     '''

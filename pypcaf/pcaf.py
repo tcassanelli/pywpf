@@ -7,7 +7,7 @@ import time as TIME
 import numpy as np
 from astropy.io import ascii
 from astropy.table import Table
-from .pcaf_functions import find_period, find_period2
+from .pcaf_functions import find_period, find_period2, CP_value
 
 __all__ = ['pcaf_single', 'pcaf_double']
 
@@ -46,16 +46,16 @@ def pcaf_single(
     pypcaf_info = Table(
         names=[
             'num_div', 'dt', 'iter', 'delta', 'T_init', 'T_est', 'idx_max',
-            'region_order'
+            'region_order', 'MAX', 'STD', 'MEAN', 'CP'
             ],
-        dtype=['int32', 'float64', 'int32'] + ['float64'] * 3 + ['int32'] * 2
+        dtype=['int32', 'float64', 'int32'] + ['float64'] * 3 + ['int32'] * 2 + ['float64'] * 4
         )
 
     # M is the number of divisions
     i_loops = 1  # loop/iteration counter
     for i in range(num_div.size):
 
-        print('... Computing loop {} ...\n'.format(i_loops))
+        # print('... Computing loop {} ...\n'.format(i_loops))
         i_loops += 1
 
         T_est, EValw, Sw, merit, idx_max = find_period(
@@ -74,12 +74,18 @@ def pcaf_single(
         SW.append(Sw)
 
         pypcaf_info.add_row([
-            num_div[i], dt, iteration, delta, T_init, T_est,
-            idx_max, region_order
-            ])
+            num_div[i], dt, iteration, delta, T_init, T_est, idx_max,
+            region_order, merit.max()
+            ] + CP_value(merit=merit, idx_max=idx_max))
+
+        # Printing in every iteration another row
+        if i == 0:
+            pypcaf_info.pprint(max_width=-1)
+        else:
+            print(pypcaf_info.pformat(max_width=-1)[i + 2])
 
     # Printing summary
-    pypcaf_info.pprint(max_lines=-1, max_width=-1)
+    # pypcaf_info.pprint(max_lines=-1, max_width=-1)
     print('\n... Storing data ... \n')
 
     if work_dir is None:

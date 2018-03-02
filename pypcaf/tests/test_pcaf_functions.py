@@ -36,7 +36,6 @@ def test_flat_region_finder():
     assert_allclose(idx_max, idx_max_true)
 
 
-# Testing new function
 def test_folding():
 
     n0 = np.load(n0_path)
@@ -50,4 +49,14 @@ def test_folding():
     assert_allclose(waterfall, folding_true['waterfall'])
 
 
+def test_folding_fast():
 
+    n0 = np.load(n0_path)
+    folding_true = np.load(folding_path)
+
+    remainder, waterfall = pypcaf.folding_fast(
+        time=n0, dt=0.002793, T=0.089367, num_div=20
+        )
+
+    assert_allclose(remainder, folding_true['remainder'])
+    assert_allclose(waterfall, folding_true['waterfall'])

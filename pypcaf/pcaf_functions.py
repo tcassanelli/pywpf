@@ -6,8 +6,9 @@ import numpy as np
 from fast_histogram import histogram1d
 
 __all__ = [
-    'nextpow2', 'flat_region_finder', 'pre_analysis', 'folding', 'pca',
-    'find_period', 'find_period2'
+    'nextpow2', 'flat_region_finder', 'pre_analysis', 'folding',
+    'folding_fast', 'pca', 'find_period', 'find_period2', 'CP_value',
+    'rms_value'
     ]
 
 
@@ -136,27 +137,30 @@ def rms_value(X):
     return np.sqrt(X.dot(X) / X.size)
 
 
-# Still working on this!
-def CP_value(merit, Sw1, idx_max, tol=0.75):
+def CP_value(merit, idx_max, frac=0.25):
     """
     Global value signal-to-noise, named Confidence Paramerter (PC). Quantifies
     the goodness fo a merit function after the PCA-Folding has been executed.
     """
 
-    idx_p = idx_max + 1
-    idx_m = idx_max - 1
+    region = merit.size * frac
 
-    while Sw1[idx_p] >= tol:
-        idx_p += 1
+    idx_left = int(idx_max - region / 2)
+    idx_right = int(idx_max + region / 2)
 
-    while Sw1[idx_m] >= tol:
-        idx_m -= 1
+    if idx_left < 0:
+        idx_left = 0
+    if idx_right > merit.size - 1:
+        idx_right = -1
 
-    X = np.hstack((merit[0:idx_m], merit[idx_p:-1]))
+    X = np.hstack((merit[0:idx_left], merit[idx_right:-1]))
 
-    CP = (merit.max() ** 2 - np.average(X) ** 2) / rms_value(X)
+    sigma = np.std(X)
+    mean = np.average(X)
 
-    return CP
+    CP = (merit.max() - mean) / sigma
+
+    return [sigma, mean, CP]
 
 
 def folding(time, dt, T, num_div):
@@ -183,9 +187,9 @@ def folding(time, dt, T, num_div):
 
     Returns
     -------
-    lc : `~numpy.ndarray`
-        Light-curve from the time array, ``time``, given an input period,
-        ``T``.
+    remainder : `~numpy.ndarray`
+        Remainder of the folding, ready to use in the `~pypcaf.light_curve`
+        light-curve.
     waterfall : `~numpy.ndarray`
         :math:`N \times M`. ``N`` matrix (two dimensional array). The
         waterfall matrix depends on the four inputs from the `~pypfac.folding`
@@ -218,67 +222,45 @@ def folding(time, dt, T, num_div):
     return remainder, waterfall
 
 
-def folding_try(time, dt, T, num_div):
+def folding_fast(time, dt, T, num_div):
+    """
+    Newer and faster folding algorithm with waterfall (diagram)
+    implementation. The ``time`` array is reshaped respect to a specific
+    period, ``T``, and placed as a waterfall diagram with a number of division
+    of ``num_div`` or ``M``. The number of divisions represents the number of
+    elements in a row (and later it will represent the number of eigenvalues
+    from in a waterfall PCA).
 
+    Parameters
+    ----------
+    time : `~numpy.ndarray`
+        One dimensional time array with certain hidden periodicity, e.g.
+        pulsar period.
+    dt : `float`
+        time bin.
+    T : `float`
+        Period used to compute the waterfall matrix, :math:`N \times M`. ``N``
+        is strictly dependent on the period and the time bin used.
+    num_div : `int`
+        Number of divisions made to the time array, which corresponds to the
+        number of elements in a row of the waterfall matrix.
+
+    Returns
+    -------
+    remainder : `~numpy.ndarray`
+        Remainder of the folding, ready to use in the `~pypcaf.light_curve`
+        light-curve.
+    waterfall : `~numpy.ndarray`
+        :math:`N \times M`. ``N`` matrix (two dimensional array). The
+        waterfall matrix depends on the four inputs from the `~pypfac.folding`
+        function. i.e. ``time``, ``dt``, ``T``, ``num_div``.
+    """
     if T < dt:
         raise TypeError('Period (T) cannot be smaller than time bin (dt)')
 
     # Light-curve needs to have a division with no modulus
     M = num_div        # M for ease of notation
     N = round(T / dt)  # It will only select the integer value
-    # Recalculating period with a (N + 1) step
-    # T_folding = np.linspace(0, T * M, N * M + 1)
-
-    # number of samples that will be considered for each row of the waterfall
-    ns = time.size // M
-    T_folding = np.linspace(0, T * M, N * M + 1)
-
-    waterfall = np.histogram(time[:M * ns], T_folding)[0].reshape(M, N)
-
-    return waterfall
-
-
-def folding_try2(time, dt, T, num_div):
-
-    if T < dt:
-        raise TypeError('Period (T) cannot be smaller than time bin (dt)')
-
-    # Light-curve needs to have a division with no modulus
-    M = num_div        # M for ease of notation
-    N = round(T / dt)  # It will only select the integer value
-
-    # Recalculating period with a (N + 1) step
-    T_folding = np.linspace(0, T, N + 1)
-
-    # number of samples that will be considered for each row of the waterfall
-    ns = time.size // M
-
-    # Modulus from division, it returns an element-wise remainder
-    remainder = time % T
-
-    w = np.apply_along_axis(
-        func1d=np.histogram,
-        axis=1,
-        arr=remainder[:M * ns].reshape(M, ns),
-        range=T_folding
-        )[:, 0]
-
-    waterfall = np.concatenate(w, axis=0).reshape(M, N)
-
-    return remainder, waterfall
-
-
-def folding_try3(time, dt, T, num_div):
-
-    if T < dt:
-        raise TypeError('Period (T) cannot be smaller than time bin (dt)')
-
-    # Light-curve needs to have a division with no modulus
-    M = num_div        # M for ease of notation
-    N = round(T / dt)  # It will only select the integer value
-
-    # Recalculating period with a (N + 1) step
-    T_folding = np.linspace(0, T, N + 1)
 
     # number of samples that will be considered for each row of the waterfall
     ns = time.size // M
@@ -297,6 +279,7 @@ def folding_try3(time, dt, T, num_div):
     waterfall = np.concatenate(w, axis=0).reshape(M, N)
 
     return remainder, waterfall
+
 
 def light_curve(remainder, T_folding):
     return np.histogram(remainder, T_folding)[0]
@@ -369,8 +352,6 @@ def pca(waterfall):
 
     # EVec[:, i] is the eigenvector corresponding to EVal[i] eigenvalue
     EVal, EVec = np.linalg.eig(cov)
-
-    print('EVal.shape: ', EVal.shape)
 
     # Sorting the eigenvalues and vectors
     sorted_positions = np.argsort(EVal.real)[::-1]
@@ -452,7 +433,7 @@ def find_period(
 
     for i in range(iteration):
         # Computing a new waterfall for every iteration
-        waterfall = folding(time=time, dt=dt, T=T_iterated, num_div=M)[1]
+        waterfall = folding_fast(time=time, dt=dt, T=T_iterated, num_div=M)[1]
         EVal, EVec = pca(waterfall=waterfall)
 
         # Storing data for each iteration

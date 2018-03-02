@@ -1,0 +1,7 @@
+
+# PLOTS
+include pypcaf/pypcaf_sty.mplstyle
+
+# TESTS
+include pypcaf/tests/data/*.npz
+include pypcaf/tests/data/*.npy
