@@ -45,9 +45,14 @@ def merit1(EValw, Sw):
 
 def merit2(EValw, Sw):
     """
-    Merit function calculation. Computes the merit function out of the
-    eigenvalues and scalar product after the waterfall diagram has been
-    calculated.
+    Merit function calculation. Computes the merit function by selecting the
+    first scalar, ``Sw``. The first scalar is constructed in
+    `pypcaf.find_period` and `pypcaf.pca` functions. First the eigenvalues are
+    sorted (maximum in the zero position) and then the eigenvector are ordered
+    according to the same relocation done in the sorting of the eigenvalues.
+    Later the hyper-diagonal is multiplied by the new sort of the
+    eigenvectors. Finally the first scalar is multiplied by the first
+    eigenvalues.
 
     Parameters
     ----------
@@ -66,24 +71,11 @@ def merit2(EValw, Sw):
     Returns
     -------
     merit : `~numpy.ndarray`
-        The merit function is calculated by selecting the maximum scalar over
-        each iteration and then finding its correspondent eigenvalue. Later a
-        modified scalar is found by adding a noise term to each iteration in
-        the scalar. Finally this modified scalar is multiplied by the
-        correspondent eigenvalues (same oreder as the maximum scalar).
+        The merit function is calculated by selecting only the first position
+        or first scalar and then multiplied it by its correspondent eigenvalue
+        which coincides with the first eigenvalue as well.
     """
 
-    M = Sw[0].size
-    N = Sw[:, 0].size
-    Sw_argmax = np.argmax(Sw, axis=1)
-
-    EValw_corr = EValw[range(Sw_argmax.size), Sw_argmax]
-
-    S_mod = []  # max scalar minus its average
-    for i in range(0, N):
-        noise = np.sum(Sw[i]) - np.max(Sw[i])
-        S_mod.append(np.max(Sw[i]) - noise / (M - 1))
-
-    merit = np.array(S_mod) * EValw_corr
+    merit = Sw[:, 0] * EValw[:, 0]
 
     return merit

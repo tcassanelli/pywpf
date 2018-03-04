@@ -48,7 +48,8 @@ def pcaf_single(
             'num_div', 'dt', 'iter', 'delta', 'T_init', 'T_est', 'idx_max',
             'region_order', 'MAX', 'STD', 'MEAN', 'CP'
             ],
-        dtype=['int32', 'float64', 'int32'] + ['float64'] * 3 + ['int32'] * 2 + ['float64'] * 4
+        dtype=['int32', 'float64', 'int32'] + ['float64'] * 3 +
+        ['int32'] * 2 + ['float64'] * 4
         )
 
     # M is the number of divisions

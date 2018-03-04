@@ -141,6 +141,28 @@ def CP_value(merit, idx_max, frac=0.25):
     """
     Global value signal-to-noise, named Confidence Paramerter (PC). Quantifies
     the goodness fo a merit function after the PCA-Folding has been executed.
+    It isolates the peak by a ``frac`` portion of the whole array. Then it
+    computes its average and tandard deviation excluding the peak region.
+
+    Parameters
+    ----------
+    merit : `~numpy.ndarray`
+        One dimentional array which contains the merit function, computed
+        trhough the eigenvector and eigenvalues, output from the PCA-Folding.
+        The merit function determines the best period found in PCA-Folding.
+    idx_max : `int`
+        Position of the maximum value in the merit function (or maximum in a
+        plateau region, depending on ``region_finder``). This index is
+        then used to compute the estimated period from the selected
+        ``iteration`` (see `pypcaf.find_period` function).
+    frac : `float`
+        Porcentage of the region to isolate the maximum peak.
+
+    Returns
+    -------
+    sigma : `float`
+    mean : `float`
+    CP : `float`
     """
 
     region = merit.size * frac

@@ -17,7 +17,7 @@ import pypcaf
 #     work_dir='../../data_pulsar/'
 #     )
 
-name = 'n500'
+name = 'n3000'
 
 pypcaf.pcaf_single(
     time_path='../../data_pulsar/{}.npy'.format(name),
@@ -26,12 +26,12 @@ pypcaf.pcaf_single(
     iteration=1000,         # 10 um scanning
     delta=1e-8,             # 10 ns step
     num_div=range(3, 23),
-    merit_func=pypcaf.merit1,
+    merit_func=pypcaf.merit2,
     region_order=3,
     work_dir='../../data_pulsar/'
     )
 
 pypcaf.plot_all_periods(
-    pypcaf_path='../../data_pulsar/pypcaf_out/{}-000'.format(name),
+    pypcaf_path='../../data_pulsar/pypcaf_out/{}-001'.format(name),
     T_ref=0.08936715
     )
