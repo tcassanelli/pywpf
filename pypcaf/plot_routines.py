@@ -8,7 +8,12 @@ import matplotlib.pyplot as plt
 from matplotlib import colors
 from astropy.io import ascii
 from scipy.constants import golden
-from .pcaf_functions import flat_region_finder
+
+
+my_list = [
+    1, 2, 3,
+    4, 5, 6,
+    ]
 
 __all__ = [
     'plot_waterfall', 'plot_lc', 'plot_period_double', 'plot_all_periods'
