@@ -17,7 +17,7 @@ import pypcaf
 #     work_dir='../../data_pulsar/'
 #     )
 
-name = 'n3000'
+name = 'n0'
 
 pypcaf.pcaf_single(
     time_path='../../data_pulsar/{}.npy'.format(name),

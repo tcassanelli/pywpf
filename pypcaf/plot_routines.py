@@ -10,11 +10,6 @@ from astropy.io import ascii
 from scipy.constants import golden
 
 
-my_list = [
-    1, 2, 3,
-    4, 5, 6,
-    ]
-
 __all__ = [
     'plot_waterfall', 'plot_lc', 'plot_period_double', 'plot_all_periods'
     ]
