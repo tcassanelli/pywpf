@@ -5,6 +5,7 @@
 import numpy as np
 from fast_histogram import histogram1d
 
+
 __all__ = [
     'nextpow2', 'flat_region_finder', 'pre_analysis', 'folding',
     'folding_fast', 'pca', 'find_period', 'find_period2', 'CP_value',
@@ -201,7 +202,7 @@ def folding(time, dt, T, num_div):
     dt : `float`
         time bin.
     T : `float`
-        Period used to compute the waterfall matrix, :math:`N \times M`. ``N``
+        Period used to compute the waterfall matrix, :math:`N \\times M`. ``N``
         is strictly dependent on the period and the time bin used.
     num_div : `int`
         Number of divisions made to the time array, which corresponds to the
@@ -213,7 +214,7 @@ def folding(time, dt, T, num_div):
         Remainder of the folding, ready to use in the `~pypcaf.light_curve`
         light-curve.
     waterfall : `~numpy.ndarray`
-        :math:`N \times M`. ``N`` matrix (two dimensional array). The
+        :math:`N \\times M`. ``N`` matrix (two dimensional array). The
         waterfall matrix depends on the four inputs from the `~pypfac.folding`
         function. i.e. ``time``, ``dt``, ``T``, ``num_div``.
     """
@@ -261,7 +262,7 @@ def folding_fast(time, dt, T, num_div):
     dt : `float`
         time bin.
     T : `float`
-        Period used to compute the waterfall matrix, :math:`N \times M`. ``N``
+        Period used to compute the waterfall matrix, :math:`N \\times M`. ``N``
         is strictly dependent on the period and the time bin used.
     num_div : `int`
         Number of divisions made to the time array, which corresponds to the
@@ -273,10 +274,11 @@ def folding_fast(time, dt, T, num_div):
         Remainder of the folding, ready to use in the `~pypcaf.light_curve`
         light-curve.
     waterfall : `~numpy.ndarray`
-        :math:`N \times M`. ``N`` matrix (two dimensional array). The
+        :math:`N \\times M`. ``N`` matrix (two dimensional array). The
         waterfall matrix depends on the four inputs from the `~pypfac.folding`
         function. i.e. ``time``, ``dt``, ``T``, ``num_div``.
     """
+
     if T < dt:
         raise TypeError('Period (T) cannot be smaller than time bin (dt)')
 
@@ -294,8 +296,8 @@ def folding_fast(time, dt, T, num_div):
         func1d=histogram1d,
         axis=1,
         arr=remainder[:M * ns].reshape(M, ns),
-        range=[0, T],
-        bins=N
+        bins=N,
+        range=[0, T]
         )
 
     waterfall = np.concatenate(w, axis=0).reshape(M, N)
@@ -335,8 +337,8 @@ def pca_signal(EVec, waterfall):
 def pca(waterfall):
     """
     It returns the eigenvalues and eigenvectors (PCA) from the covariance
-    matrix of a normalized waterfall array of length, math:`N\time M`. math:`M`
-    represents the number of eigenvalues and eigenvectors.
+    matrix of a normalized waterfall array of length, math:`N\\time M`.
+    math:`M` represents the number of eigenvalues and eigenvectors.
 
     Parameters
     ----------
@@ -552,10 +554,11 @@ def find_period2(
         region_order=region_order
         )
 
+    # Workaround without np.float the code stops, need to figure this out!
     T_est2, EValw2, Sw2, merit2, idx2_max = find_period(
         time=time,
         dt=dt,
-        T_init=T_est1,
+        T_init=np.float(T_est1),  # TypeError: Error parsing input
         iteration=iterations[1],
         delta=deltas[1],
         num_div=num_div,
