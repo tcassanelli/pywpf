@@ -16,7 +16,7 @@ mathtext.fontset    : stix
 
 # FONT
 font.family         : serif
-font.serif          : Computer Modern Roman
+font.serif          : DejaVu Serif
 font.size           : 7
 
 # AXES
