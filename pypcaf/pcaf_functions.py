@@ -472,6 +472,8 @@ def find_period(
     # EValw[:, 0] all iterations for the first eigenvalue
     EValw = np.array(eigenvalues)
 
+    # Future development decouple the period calculation
+    # using an independent function that calls the merit func
     merit = merit_func(EValw=EValw, Sw=Sw)
 
     if region_order > 1:
