@@ -30,14 +30,16 @@ def noise_to_signal(old_signal, level):
     return new_signal_sorted
 
 
-# Now generating the data files
-data = np.load('../../data_pulsar/n0.npy')
+if __name__ == '__main__':
 
-for l in np.arange(0, 1.05, 0.05):
+    # Now generating the data files
+    data = np.load('../../data_pulsar/n0.npy')
 
-    noise_data = noise_to_signal(old_signal=data, level=l)
+    for l in np.arange(0, 1.05, 0.05):
 
-    np.save(
-        file='n' + str(int(l * 100)),
-        arr=noise_data
-        )
+        noise_data = noise_to_signal(old_signal=data, level=l)
+
+        np.save(
+            file='n' + str(int(l * 100)),
+            arr=noise_data
+            )

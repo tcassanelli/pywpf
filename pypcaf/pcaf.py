@@ -16,6 +16,43 @@ def pcaf_single(
     time_path, dt, T_init, iteration, delta, num_div, merit_func,
     region_order, work_dir=None
         ):
+    """
+    Core function for the `~pypcaf` package. It computes one estimated period
+    given an inital period and a time array (one dimenional), with its
+    corresponent time bin.
+
+    Parameters
+    ----------
+    time_path : `str`
+        String with the path to the file. The file must be a text-like file,
+        e.g. .csv, .txt, ext. It can also be a python binary file .npy. In any
+        case it must be always a one dimensional array.
+    dt : `float`
+        time bin.
+    T_init : `float`
+        Initial period to start looking for a best estimate, ``T_est``.
+    iterations : `list`
+        Corresponds to ``[iteration1, iteration2]``.
+    delta : `float`
+        Increase of the period in each iteration. The recommended order of it
+        is between ``1e-7`` and ``1e-8``.
+    num_div : `int`
+        Number of divisions made to the time array, which corresponds to the
+        number of elements in a row of the waterfall matrix.
+    merit_func : `function`
+        It computes the merit function from eigenvalues and scalar arrays.
+        Both of them should be a one dimensional array.
+    region_order : `int`
+        It makes use of the `~pypcaf.flat_region_finder` to search for the
+        maximum in the selected merit function. If ``region_order = 1``,
+        it will compute the ordinary maximum of the merit array, i.e.
+        ``np.max(merit)``. This function defines the estimated period in both
+        ``iterations``.
+    work_dir : `str`
+        Default is `None`, it will store the ``pypcaf_out/`` folder in
+        elsewhere. The current configuration stores files next to the
+        `~pypcaf.pcaf` script.
+    """
 
     start_time = TIME.time()
 
@@ -123,7 +160,7 @@ def pcaf_double(
     region_order, use_previous, work_dir=None
         ):
     """
-    Core functionfor the `~pypcaf` package. It computes two estimated periods
+    Core function for the `~pypcaf` package. It computes two estimated periods
     given an inital period and a time array (one dimenional), with its
     corresponent time bin.
 

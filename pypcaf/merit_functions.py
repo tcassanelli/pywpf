@@ -79,3 +79,11 @@ def merit2(EValw, Sw):
     merit = Sw[:, 0] * EValw[:, 0]
 
     return merit
+
+
+def merit3(EValw, Sw):
+
+    weight = Sw[:, 0] - np.mean(Sw[:, 1:], axis=1)
+    weight[weight < 0] = 0
+
+    return EValw[:, 0] * weight

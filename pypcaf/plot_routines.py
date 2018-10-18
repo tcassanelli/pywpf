@@ -4,15 +4,16 @@
 # Author: Tomas Cassanelli
 import os
 import numpy as np
-
 import matplotlib.pyplot as plt
 from matplotlib import colors
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from astropy.io import ascii
 from scipy.constants import golden
 
 
 __all__ = [
-    'plot_waterfall', 'plot_lc', 'plot_period_double', 'plot_all_periods'
+    'plot_waterfall', 'plot_lc', 'plot_scalars', 'plot_period_double',
+    'plot_all'
     ]
 
 # Plot style added from relative path
@@ -30,7 +31,7 @@ def plot_waterfall(waterfall, T):
     cb = fig.colorbar(im, ax=ax)
     cb.set_label('Total counts')
     ax.set_title('Waterfall rows: {}, dt = {} s'.format(M, dt))
-    ax.set_xlabel('Bin s')
+    ax.set_xlabel('Bin [s]')
     ax.set_ylabel('Light curves')
     ax.grid('off')
 
@@ -47,11 +48,94 @@ def plot_lc(lc, N, T):
         period_time, lc, 'ro-',
         label='Period {} s'.format(T), linewidth=1.5
         )
-    ax.set_title('Light curve dt = {} s'.format(dt))
-    ax.set_xlabel('Time s')
+    ax.set_title('Light curve dt = {} [s]'.format(dt))
+    ax.set_xlabel('Time [s]')
     ax.set_ylabel('Total counts')
     ax.legend(loc='best')
     ax.grid('off')
+
+    return fig
+
+
+def plot_scalars(pypcaf_path, num_div, T_ref=None):
+    """
+    for the moment only for a single iteration NO pcaf_double output
+    """
+
+    pypcaf_info = os.path.join(pypcaf_path, 'info.dat')
+    pypcaf_out = os.path.join(
+        pypcaf_path, 'M{}.npz'.format(num_div)
+        )
+    info = ascii.read(pypcaf_info)
+
+    # index relative to the num_div
+    idx = np.where(info['num_div'] == num_div)[0][0]
+
+    # Estimated periods
+    T_est = info['T_est'][idx]
+
+    data = np.load(pypcaf_out)
+
+    time_x = np.linspace(
+        info['T_init'][idx] - info['delta'][idx] * info['iter'][idx] / 2,
+        info['T_init'][idx] + info['delta'][idx] * info['iter'][idx] / 2,
+        info['iter'][idx],
+        endpoint=False
+        )
+
+    if 'iter2' in info.keys():
+        SW = np.rot90(data['SW2'], -1)
+    else:
+        SW = np.rot90(data['SW'], -1)
+
+    fig, ax = plt.subplots(figsize=(10, 10 / golden))
+
+    im = ax.pcolor(time_x, np.linspace(0, num_div, num_div + 1), SW)
+
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="3%", pad=0.03)
+    cb = fig.colorbar(im, cax=cax)
+    cb.ax.set_ylabel('Scalar amplitude')
+
+    ax.set_yticks(np.arange(0, num_div, 1) + .5)
+    ax.set_yticklabels(np.arange(1, num_div + 1, 1))
+
+    ax.set_ylabel('Number of divisions (M)')
+    ax.set_xlabel('Time [s]')
+
+    # Estimated and reference period
+    ax.axvline(
+        x=T_est,
+        color='r',
+        label='$T_\\mathrm{est1}$',
+        linewidth=1
+        )
+
+    if T_ref is not None:
+        ax.axvline(
+            x=T_ref,
+            color='dimgray',
+            label='$T_\\mathrm{ref}$',
+            linewidth=1
+            )
+
+    # white horizontal lines
+    for i in range(num_div):
+        ax.axhline(
+            y=i,
+            color='white',
+            linewidth=0.7
+            )
+    ax.grid(False)
+
+    name = os.path.split(pypcaf_path)[1]
+    ax.set_title(
+        name + '. $T_\\mathrm{est}=' +
+        str(T_est) + '$ s, $dt=' + str(info['dt'][idx]) +
+        '$ s, $M=' + str(info['num_div'][idx]) + '$'
+        )
+
+    fig.tight_layout()
 
     return fig
 
@@ -83,16 +167,6 @@ def plot_period_single(pypcaf_path, num_div, T_ref=None):
 
     for i, alpha in zip(range(2), [1, .5]):
 
-        # Eigenvalues 1 and 2
-        ax.plot(
-            time_x,
-            data['EVALW'][:, i],
-            label='$u_' + str(i + 1) + '$',
-            color='b',
-            alpha=alpha,
-            marker='+'
-            )
-
         # Scalar 1 and 2
         ax.plot(
             time_x,
@@ -102,6 +176,16 @@ def plot_period_single(pypcaf_path, num_div, T_ref=None):
             alpha=alpha,
             marker='^'
             )
+
+    # Eigenvalue 1
+    ax.plot(
+        time_x,
+        data['EVALW'][:, 0],
+        label='$u_' + str(i + 1) + '$',
+        color='b',
+        alpha=1,
+        marker='+'
+        )
 
     # Merit function
     ax.plot(
@@ -146,7 +230,7 @@ def plot_period_single(pypcaf_path, num_div, T_ref=None):
         '$ s, $M=' + str(info['num_div'][idx]) + '$'
         )
 
-    ax.set_xlabel('Time s')
+    ax.set_xlabel('Time [s]')
     ax.set_ylabel('Scalar, eigenvalues and merit amplitude')
     ax.set_xlim(time_x[0], time_x[-1])
     ax.legend(loc='upper right')
@@ -285,7 +369,7 @@ def plot_period_double(pypcaf_path, num_div, T_ref=None):
         )
 
     for i in range(2):
-        ax[i].set_xlabel('Time s')
+        ax[i].set_xlabel('Time [s]')
         ax[i].set_ylabel('Scalar, eigenvalues and merit amplitude')
         ax[i].set_xlim(time_x[i][0], time_x[i][-1])
         ax[i].legend(loc='upper right')
@@ -295,7 +379,7 @@ def plot_period_double(pypcaf_path, num_div, T_ref=None):
     return fig
 
 
-def plot_all_periods(pypcaf_path, T_ref=None):
+def plot_all(pypcaf_path, T_ref=None):
 
     pypcaf_info = os.path.join(pypcaf_path, 'info.dat')
     info = ascii.read(pypcaf_info)
@@ -317,10 +401,18 @@ def plot_all_periods(pypcaf_path, T_ref=None):
         plot_func = plot_period_single
 
     for M in num_div:
-        fig = plot_func(
+        fig1 = plot_func(
             pypcaf_path=pypcaf_path,
             num_div=M,
             T_ref=T_ref
             )
-        fig.savefig(os.path.join(path_plot, 'M{}.pdf'.format(M)))
-        plt.close(fig)
+        fig1.savefig(os.path.join(path_plot, 'M{}.pdf'.format(M)))
+        plt.close(fig1)
+
+        fig2 = plot_scalars(
+            pypcaf_path=pypcaf_path,
+            num_div=M,
+            T_ref=T_ref
+            )
+        fig2.savefig(os.path.join(path_plot, 'SW{}.pdf'.format(M)))
+        plt.close(fig2)
