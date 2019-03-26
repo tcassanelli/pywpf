@@ -4,7 +4,7 @@
 # Author: Tomas Cassanelli
 import numpy as np
 
-__all__ = ['merit1', 'merit2']
+__all__ = ['merit1', 'merit2', 'merit3']
 
 
 def merit1(EValw, Sw):
@@ -83,7 +83,43 @@ def merit2(EValw, Sw):
 
 def merit3(EValw, Sw):
 
-    weight = Sw[:, 0] - np.mean(Sw[:, 1:], axis=1)
+    """
+    Merit function calculation. Computes the merit function by selecting the
+    first scalar, ``Sw`` minus a weight. The weight is given by the average of
+    the second until last scalar. The first scalar is constructed in
+    `pypcaf.find_period` and `pypcaf.pca` functions. First the eigenvalues are
+    sorted (maximum in the zero position) and then the eigenvector are ordered
+    according to the same relocation done in the sorting of the eigenvalues.
+    Later the hyper-diagonal is multiplied by the new sort of the
+    eigenvectors. Finally the first scalar is multiplied by the first
+    eigenvalues.
+
+    Parameters
+    ----------
+    EValw : `~numpy.ndarray`
+        Set of eigenvalues of math:`N` length, i.e. the number of
+        iterations, ``iteration``. EValw[:, 0] represents all iteration for the
+        first eigenvalue.
+    Sw : `~numpy.ndarray`
+        Set of scalars of math:`N` length, i.e. the number of
+        iterations, ``iteration``. The scalar value is the projection of each
+        for the eigenvectors into the hyper-diagonal unitary vector. In other
+        words, the dot product of the (absolute value) eigenvector times the
+        same dimension unitary vector. Sw[:, 0] represents all iteration for
+        the first eigenvector.
+
+    Returns
+    -------
+    merit : `~numpy.ndarray`
+        The merit function is calculated by selecting only the first position
+        or first scalar minus weight (average of second until last scalar) and 
+        then multiplied it by its correspondent eigenvalue which coincides with
+        the first eigenvalue as well.
+    """
+
+    weight = Sw[:, 0] - Sw[:, 1:].mean(axis=1)
+
+    # Negative values don't make any sense so for now they'll be set to zero
     weight[weight < 0] = 0
 
     return EValw[:, 0] * weight
