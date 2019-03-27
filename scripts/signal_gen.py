@@ -35,11 +35,14 @@ if __name__ == '__main__':
     # Now generating the data files
     data = np.load('../../data_pulsar/n0.npy')
 
-    for l in np.arange(0, 1.05, 0.05):
+    # for l in np.arange(0, 1.05, 0.05):
 
-        noise_data = noise_to_signal(old_signal=data, level=l)
+    #     noise_data = noise_to_signal(old_signal=data, level=l)
 
-        np.save(
-            file='n' + str(int(l * 100)),
-            arr=noise_data
-            )
+    #     np.save(
+    #         file='n' + str(int(l * 100)),
+    #         arr=noise_data
+    #         )
+
+noise_data = noise_to_signal(old_signal=data, level=2.75)
+np.save('n275', noise_data)
