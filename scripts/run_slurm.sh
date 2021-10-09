@@ -21,4 +21,4 @@ path2file=$directory$file
 # python environment
 APY3="/home/v/vanderli/cassane/anaconda3/bin/python"
 
-$APY3 $file
+$APY3 $path2file
