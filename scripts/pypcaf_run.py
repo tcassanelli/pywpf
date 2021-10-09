@@ -34,7 +34,7 @@ for f in files:
             T_init=0.089367,
             iteration=1000,         # 10 us scanning
             delta=1e-8,             # 10 ns step
-            num_div=range(3, 5),
+            num_div=range(3, 21),
             merit_func=m,
             region_order=3,
             work_dir='/scratch/v/vanderli/cassane/data_pulsar/'
