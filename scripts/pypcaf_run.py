@@ -9,7 +9,7 @@ import pypcaf
 files = [
     'n0', 'n25', 'n50', 'n75', 'n100', 'n200', 'n250', 'n275', 'n300', 'n325'
     ]
-series = ['000', '001', '002']
+series = ['000']
 merit_func = [pypcaf.merit1, pypcaf.merit2, pypcaf.merit3]
 
 # pypcaf.pcaf_double(
