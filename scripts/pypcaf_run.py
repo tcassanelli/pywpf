@@ -25,25 +25,23 @@ merit_func = [pypcaf.merit1, pypcaf.merit2, pypcaf.merit3]
 #     work_dir='../../data_pulsar2/'
 #     )
 
-for f in files:
-
-    for m in merit_func:
+for _s, _m in zip(series, merit_func):
+    for _f in files:
         pypcaf.pcaf_single(
-            time_path=f'/scratch/v/vanderli/cassane/data_pulsar/{f}.npy',
+            time_path=f'/scratch/v/vanderli/cassane/data_pulsar/{_f}.npy',
             dt=0.002793,
             T_init=0.089367,
             iteration=1000,         # 10 us scanning
             delta=1e-8,             # 10 ns step
             num_div=range(3, 21),
-            merit_func=m,
+            merit_func=_m,
             region_order=3,
             work_dir='/scratch/v/vanderli/cassane/data_pulsar/'
             )
 
-    for s in series:
         pypcaf.plot_all(
             pypcaf_path=(
-                f'/scratch/v/vanderli/cassane/data_pulsar/pypcaf_out/{f}-{f}'
+                f'/scratch/v/vanderli/cassane/data_pulsar/pypcaf_out/{_f}-{_s}'
                 ),
             T_ref=0.08936715
             )
