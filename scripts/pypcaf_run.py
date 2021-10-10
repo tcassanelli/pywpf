@@ -7,7 +7,8 @@ import pypcaf
 # PyPCAF execution
 
 files = [
-    'n0', 'n25', 'n50', 'n75', 'n100', 'n200', 'n250', 'n275', 'n300', 'n325'
+    # 'n0', 'n25', 'n50', 'n75', 'n100', 'n200', 'n250',
+    'n275', 'n300', 'n325'
     ]
 series = ['000']
 merit_func = [pypcaf.merit1, pypcaf.merit2, pypcaf.merit3]
