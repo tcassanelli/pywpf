@@ -57,7 +57,7 @@ for _s, _m in zip(series, merit_func):
         pypcaf.pcaf_single(
             time_path=f'/scratch/v/vanderli/cassane/data_crab/{_f}.npy',
             dt=0.0001,
-            T_init=0.033392,
+            T_init=0.03362167003,
             iteration=1000,         # 10 us scanning
             delta=1e-8,             # 10 ns step
             num_div=range(3, 21),
@@ -70,7 +70,7 @@ for _s, _m in zip(series, merit_func):
             pypcaf_path=(
                 f'/scratch/v/vanderli/cassane/data_crab/pypcaf_out/{_f}-{_s}'
                 ),
-            T_ref=0.03339241
+            T_ref=0.03362167003
             )
 
 
@@ -99,7 +99,7 @@ for _s, _m in zip(series, merit_func):
 # import numpy as np
 # pypcaf.folding(
 #     time=np.load("/Users/tomascassanelli/PCAF/data_crab/n0.npy"),
-#     dt=0.00001, T=0.03339241, num_div=5
+#     dt=0.00001, T=0.03362167003, num_div=5
 #     )
 
 # crab
@@ -108,7 +108,7 @@ for _s, _m in zip(series, merit_func):
 #         pypcaf.pcaf_single(
 #             time_path=f'/Users/tomascassanelli/PCAF/data_crab/{_f}.npy',
 #             dt=0.0001,
-#             T_init=0.03339241,
+#             T_init=0.03362167003,
 #             iteration=1000,
 #             delta=1e-8,
 #             num_div=range(3, 21),
@@ -121,5 +121,5 @@ for _s, _m in zip(series, merit_func):
 #             pypcaf_path=(
 #                 f'/Users/tomascassanelli/PCAF/data_crab/pypcaf_out/{_f}-{_s}'
 #                 ),
-#             T_ref=0.0333924123
+#             T_ref=0.03362167003
 #             )
