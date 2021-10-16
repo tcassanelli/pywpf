@@ -451,13 +451,16 @@ def find_period(
     M = num_div
     T_iterated = T_init - iteration / 2 * delta
 
+    # N = round(T_iterated / dt)
+
     eigenvalues = []
     scalar = []
     u = np.ones((M, 1)) / np.sqrt(M)  # hyper-diagonal unitary vector
 
     for i in range(iteration):
         # Computing a new waterfall for every iteration
-        waterfall = folding_fast(time=time, dt=dt, T=T_iterated, num_div=M)[1]
+        # waterfall = folding_fast(time=time, dt=dt, T=T_iterated, num_div=M)[1]
+        waterfall = folding(time=time, dt=dt, T=T_iterated, num_div=M)[1]
         EVal, EVec = pca(waterfall=waterfall)
 
         # Storing data for each iteration
