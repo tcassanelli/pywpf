@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Author: Tomas Cassanelli
+import numpy as np
 import pypcaf
 
 # PyPCAF execution
