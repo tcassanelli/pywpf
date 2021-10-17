@@ -60,7 +60,7 @@ for _s, _m in zip(series, merit_func):
             T_init=0.03362167003,
             iteration=1000,         # 10 us scanning
             delta=1e-8,             # 10 ns step
-            num_div=range(3, 21),
+            num_div=np.linspace(5, 200, 50, dtype=int),
             merit_func=_m,
             region_order=3,
             work_dir='/scratch/v/vanderli/cassane/data_crab/'
