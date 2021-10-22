@@ -15,26 +15,12 @@ files = [
 series = ['000']
 merit_func = [pypcaf.merit1, pypcaf.merit2, pypcaf.merit3]
 
-# pypcaf.pcaf_double(
-#     time_path='../../data_pulsar2/{}.npy'.format(name),
-#     dt=0.002793,
-#     T_init=0.089367,
-#     iterations=[100, 400],
-#     deltas=[1e-7, 1e-9],
-#     num_div=range(3, 10),
-#     merit_func=pypcaf.merit2,
-#     region_order=3,
-#     use_previous=False,
-#     work_dir='../../data_pulsar2/'
-#     )
-
-
 
 # vela scinet
 for _s, _m in zip(series, merit_func):
     for _f in files:
         pypcaf.pca_folding(
-            times_path=f'/scratch/v/vanderli/cassane/data_pulsar/{_f}.npy',
+            times_path=f'/scratch/v/vanderli/cassane/data_vela/{_f}.npy',
             dt=0.002793,
             T_init=0.089367,
             iteration=1000,         # 10 us scanning
@@ -42,12 +28,12 @@ for _s, _m in zip(series, merit_func):
             num_div=range(3, 21),
             merit_func=_m,
             region_order=3,
-            work_dir='/scratch/v/vanderli/cassane/data_pulsar/'
+            work_dir='/scratch/v/vanderli/cassane/data_vela/'
             )
 
         pypcaf.plot_all(
             pypcaf_path=(
-                f'/scratch/v/vanderli/cassane/data_pulsar/pypcaf_out/{_f}-{_s}'
+                f'/scratch/v/vanderli/cassane/data_vela/pypcaf_out/{_f}-{_s}'
                 ),
             T_ref=0.08936715
             )
