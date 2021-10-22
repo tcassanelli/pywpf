@@ -182,7 +182,7 @@ def CP_value(merit, idx_max, frac=0.25):
 
     CP = (merit.max() - mean) / sigma
 
-    return sigma, mean, CP
+    return [sigma, mean, CP]
 
 
 def folding(times, dt, T, num_div):
