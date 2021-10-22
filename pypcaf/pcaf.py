@@ -7,7 +7,7 @@ import time as TIME
 import numpy as np
 from astropy.io import ascii
 from astropy.table import Table
-from .pcaf_functions import find_period, find_period2, CP_value
+from .pcaf_functions import find_period, CP_value
 
 __all__ = ['pca_folding']
 
