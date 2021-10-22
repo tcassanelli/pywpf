@@ -6,3 +6,4 @@ from .pcaf import *
 from .plot_routines import *
 from .pcaf_functions import *
 from .merit_functions import *
+from .efolding import *

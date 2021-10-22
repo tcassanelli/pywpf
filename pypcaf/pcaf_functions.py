@@ -183,7 +183,7 @@ def CP_value(merit, idx_max, frac=0.25):
 
     CP = (merit.max() - mean) / sigma
 
-    return [sigma, mean, CP]
+    return sigma, mean, CP
 
 
 def folding(time, dt, T, num_div):
@@ -227,7 +227,7 @@ def folding(time, dt, T, num_div):
     N = round(T / dt)  # It will only select the integer value
 
     # Recalculating period with a (N + 1) step
-    T_folding = np.linspace(0, T, N + 1)
+    bins = np.linspace(0, T, N + 1, dtype=type(T))
 
     # number of samples that will be considered for each row of the waterfall
     ns = time.size // M
@@ -235,12 +235,10 @@ def folding(time, dt, T, num_div):
     # Modulus from division, it returns an element-wise remainder
     remainder = time % T
 
-    w = []
-    for line in range(M):
-        # selection of each M in time array
-        indices = range(ns * line, ns * (line + 1))
-        w.append(np.histogram(remainder[indices], bins=T_folding)[0])
-    waterfall = np.array(w)
+    waterfall = np.zeros((M, N), dtype=bins.dtype)
+    for m in range(M):
+        indices = range(ns * m, ns * (m + 1))
+        waterfall[m, :] = np.histogram(remainder[indices], bins=bins)[0]
 
     return remainder, waterfall
 
@@ -449,7 +447,7 @@ def find_period(
     """
 
     M = num_div
-    T_iterated = T_init - iteration / 2 * delta
+    T_iterated = T_init - iteration // 2 * delta
 
     # N = round(T_iterated / dt)
 
