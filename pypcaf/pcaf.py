@@ -56,7 +56,7 @@ def pca_folding(
 
     start_time = TIME.time()
 
-    print('\n ******* PyPCAF: finding pulsar period (single) ******* \n')
+    print('\n ******* PyPCAF: finding pulsar period ******* \n')
 
     if not all(num_div[i] <= num_div[i + 1] for i in range(len(num_div) - 1)):
         raise TypeError('num_div has to be sorted')
