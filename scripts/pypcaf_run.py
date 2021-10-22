@@ -31,26 +31,26 @@ merit_func = [pypcaf.merit1, pypcaf.merit2, pypcaf.merit3]
 
 
 # vela scinet
-# for _s, _m in zip(series, merit_func):
-#     for _f in files:
-#         pypcaf.pcaf_single(
-#             time_path=f'/scratch/v/vanderli/cassane/data_pulsar/{_f}.npy',
-#             dt=0.002793,
-#             T_init=0.089367,
-#             iteration=1000,         # 10 us scanning
-#             delta=1e-8,             # 10 ns step
-#             num_div=range(3, 21),
-#             merit_func=_m,
-#             region_order=3,
-#             work_dir='/scratch/v/vanderli/cassane/data_pulsar/'
-#             )
+for _s, _m in zip(series, merit_func):
+    for _f in files:
+        pypcaf.pca_folding(
+            times_path=f'/scratch/v/vanderli/cassane/data_pulsar/{_f}.npy',
+            dt=0.002793,
+            T_init=0.089367,
+            iteration=1000,         # 10 us scanning
+            delta=1e-8,             # 10 ns step
+            num_div=range(3, 21),
+            merit_func=_m,
+            region_order=3,
+            work_dir='/scratch/v/vanderli/cassane/data_pulsar/'
+            )
 
-#         pypcaf.plot_all(
-#             pypcaf_path=(
-#                 f'/scratch/v/vanderli/cassane/data_pulsar/pypcaf_out/{_f}-{_s}'
-#                 ),
-#             T_ref=0.08936715
-#             )
+        pypcaf.plot_all(
+            pypcaf_path=(
+                f'/scratch/v/vanderli/cassane/data_pulsar/pypcaf_out/{_f}-{_s}'
+                ),
+            T_ref=0.08936715
+            )
 
 # crab scinet
 # for _s, _m in zip(series, merit_func):
@@ -76,26 +76,26 @@ merit_func = [pypcaf.merit1, pypcaf.merit2, pypcaf.merit3]
 
 
 # vela
-for _s, _m in zip(series, merit_func):
-    for _f in files:
-        pypcaf.pca_folding(
-            times_path=f'/Users/tomascassanelli/PCAF/data_vela/{_f}.npy',
-            dt=0.002793,
-            T_init=0.089367,
-            iteration=1000,         # 10 us scanning
-            delta=1e-8,             # 10 ns step
-            num_div=range(3, 21),
-            merit_func=_m,
-            region_order=3,
-            work_dir='/Users/tomascassanelli/PCAF/data_vela/'
-            )
+# for _s, _m in zip(series, merit_func):
+#     for _f in files:
+#         pypcaf.pca_folding(
+#             times_path=f'/Users/tomascassanelli/PCAF/data_vela/{_f}.npy',
+#             dt=0.002793,
+#             T_init=0.089367,
+#             iteration=1000,         # 10 us scanning
+#             delta=1e-8,             # 10 ns step
+#             num_div=range(3, 21),
+#             merit_func=_m,
+#             region_order=3,
+#             work_dir='/Users/tomascassanelli/PCAF/data_vela/'
+#             )
 
-        pypcaf.plot_all(
-            pypcaf_path=(
-                f'/Users/tomascassanelli/PCAF/data_vela/pypcaf_out/{_f}-{_s}'
-                ),
-            T_ref=0.08936715
-            )
+#         pypcaf.plot_all(
+#             pypcaf_path=(
+#                 f'/Users/tomascassanelli/PCAF/data_vela/pypcaf_out/{_f}-{_s}'
+#                 ),
+#             T_ref=0.08936715
+#             )
 
 # import numpy as np
 # pypcaf.folding(
