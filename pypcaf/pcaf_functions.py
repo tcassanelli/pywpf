@@ -226,7 +226,7 @@ def folding(times, dt, T, num_div):
     N = round(T / dt)  # It will only select the integer value
 
     # Recalculating period with a (N + 1) step
-    bins = np.linspace(0, T, N + 1, dtype=int)
+    bins = np.linspace(0, T, N + 1)
 
     # number of samples that will be considered for each row of the waterfall
     ns = times.size // M
