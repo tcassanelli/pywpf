@@ -114,7 +114,7 @@ def pca_folding(
         pypcaf_info.add_row([
             num_div[i], dt, iteration, delta, T_init, T_est, idx_max,
             region_order, merit.max()
-            ] + CP_value(merit=merit, idx_max=idx_max))
+            ] + [CP_value(merit=merit, idx_max=idx_max)])
 
         # Printing in every iteration another row
         if i == 0:
