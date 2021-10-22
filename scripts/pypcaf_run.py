@@ -9,8 +9,8 @@ import pypcaf
 
 files = [
     'n0',
-    # 'n25', 'n50', 'n75', 'n100', 'n200', 'n250',
-    # 'n275', 'n300', 'n325'
+    'n25', 'n50', 'n75', 'n100', 'n200', 'n250',
+    'n275', 'n300', 'n325'
     ]
 series = ['000']
 merit_func = [pypcaf.merit1, pypcaf.merit2, pypcaf.merit3]
@@ -55,8 +55,8 @@ merit_func = [pypcaf.merit1, pypcaf.merit2, pypcaf.merit3]
 # crab scinet
 for _s, _m in zip(series, merit_func):
     for _f in files:
-        pypcaf.pcaf_single(
-            time_path=f'/scratch/v/vanderli/cassane/data_crab/{_f}.npy',
+        pypcaf.pca_folding(
+            times_path=f'/scratch/v/vanderli/cassane/data_crab/{_f}.npy',
             dt=0.0001,
             T_init=0.03362167003,
             iteration=1000,         # 10 us scanning

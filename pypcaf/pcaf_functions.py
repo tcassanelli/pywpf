@@ -8,8 +8,7 @@ from fast_histogram import histogram1d
 
 __all__ = [
     'nextpow2', 'flat_region_finder', 'pre_analysis', 'folding',
-    'folding_fast', 'pca', 'find_period', 'find_period2', 'CP_value',
-    'rms_value'
+    'folding_fast', 'pca', 'find_period', 'CP_value', 'rms_value'
     ]
 
 
@@ -64,43 +63,43 @@ def flat_region_finder(X, n=3):
     return idx_max
 
 
-def pre_analysis(time, dt, T_init):
+def pre_analysis(times, dt, T_init):
     """
-    Given a one dimensional time array, ``time``, the function computes its
+    Given a one dimensional times array, ``times``, the function computes its
     FFT to find a better period than the given one, ``T_init``. Be aware that
-    depending on the signal-to-noise of the time array, may or may not find a
+    depending on the signal-to-noise of the times array, may or may not find a
     correct value. For really noisy signals do not use this function.
 
     Parameters
     ----------
-    time : `~numpy.ndarray`
-        One dimensional time array with certain hidden periodicity, e.g.
+    times : `~numpy.ndarray`
+        One dimensional times array with certain hidden periodicity, e.g.
         pulsar period.
     dt : `float`
-        time bin.
+        times bin.
     T_init : `float`
         Initial period.
 
     Returns
     -------
     T_est : `float`
-        Estimated period from the ``time`` array, found by a FFT analysis.
+        Estimated period from the ``times`` array, found by a FFT analysis.
     """
 
     if T_init < dt:
         raise TypeError(
-            'Initial period (T_init) cannot be smaller than time bin (dt)'
+            'Initial period (T_init) cannot be smaller than times bin (dt)'
             )
 
     f_start = 1 / T_init  # starting frequency
 
     # Setting the x axis for histogram
-    time_n = int(round(time[-1] / dt) + 1)  # number of elements in time array
-    time_x = np.linspace(0, time[-1], time_n)
+    times_n = int(round(times[-1] / dt) + 1)  # number of elements in times array
+    times_x = np.linspace(0, times[-1], times_n)
 
-    # counts the number of values in the time array that are within each
-    # specified bin range, time_x
-    data_bin = np.histogram(time, bins=time_x)[0]
+    # counts the number of values in the times array that are within each
+    # specified bin range, times_x
+    data_bin = np.histogram(times, bins=times_x)[0]
 
     f_step = 1 / dt  # frequency step
     NFFT = 2 ** nextpow2(data_bin.size)  # length of the transform
@@ -186,26 +185,26 @@ def CP_value(merit, idx_max, frac=0.25):
     return sigma, mean, CP
 
 
-def folding(time, dt, T, num_div):
+def folding(times, dt, T, num_div):
     """
     Classical folding algorithm with waterfall (diagram) implementation. The
-    ``time`` array is reshaped respect to a specific period, ``T``, and placed
+    ``times`` array is reshaped respect to a specific period, ``T``, and placed
     as a waterfall diagram with a number of division of ``num_div`` or ``M``.
     The number of divisions represents the number of elements in a row (and
     later it will represent the number of eigenvalues from in a waterfall PCA).
 
     Parameters
     ----------
-    time : `~numpy.ndarray`
-        One dimensional time array with certain hidden periodicity, e.g.
+    times : `~numpy.ndarray`
+        One dimensional times array with certain hidden periodicity, e.g.
         pulsar period.
     dt : `float`
-        time bin.
+        times bin.
     T : `float`
-        Period used to compute the waterfall matrix, :math:`N \\times M`. ``N``
-        is strictly dependent on the period and the time bin used.
+        Period used to compute the waterfall matrix, :math:`N \\timess M`. ``N``
+        is strictly dependent on the period and the times bin used.
     num_div : `int`
-        Number of divisions made to the time array, which corresponds to the
+        Number of divisions made to the times array, which corresponds to the
         number of elements in a row of the waterfall matrix.
 
     Returns
@@ -214,28 +213,28 @@ def folding(time, dt, T, num_div):
         Remainder of the folding, ready to use in the `~pypcaf.light_curve`
         light-curve.
     waterfall : `~numpy.ndarray`
-        :math:`N \\times M`. ``N`` matrix (two dimensional array). The
+        :math:`N \\timess M`. ``N`` matrix (two dimensional array). The
         waterfall matrix depends on the four inputs from the `~pypfac.folding`
-        function. i.e. ``time``, ``dt``, ``T``, ``num_div``.
+        function. i.e. ``times``, ``dt``, ``T``, ``num_div``.
     """
 
     if T < dt:
-        raise TypeError('Period (T) cannot be smaller than time bin (dt)')
+        raise TypeError('Period (T) cannot be smaller than times bin (dt)')
 
     # Light-curve needs to have a division with no modulus
     M = num_div        # M for ease of notation
     N = round(T / dt)  # It will only select the integer value
 
     # Recalculating period with a (N + 1) step
-    bins = np.linspace(0, T, N + 1, dtype=type(T))
+    bins = np.linspace(0, T, N + 1, dtype=int)
 
     # number of samples that will be considered for each row of the waterfall
-    ns = time.size // M
+    ns = times.size // M
 
     # Modulus from division, it returns an element-wise remainder
-    remainder = time % T
+    remainder = times % T
 
-    waterfall = np.zeros((M, N), dtype=bins.dtype)
+    waterfall = np.zeros((M, N), dtype=times.dtype)
     for m in range(M):
         indices = range(ns * m, ns * (m + 1))
         waterfall[m, :] = np.histogram(remainder[indices], bins=bins)[0]
@@ -243,10 +242,10 @@ def folding(time, dt, T, num_div):
     return remainder, waterfall
 
 
-def folding_fast(time, dt, T, num_div):
+def folding_fast(times, dt, T, num_div):
     """
     Newer and faster folding algorithm with waterfall (diagram)
-    implementation. The ``time`` array is reshaped respect to a specific
+    implementation. The ``times`` array is reshaped respect to a specific
     period, ``T``, and placed as a waterfall diagram with a number of division
     of ``num_div`` or ``M``. The number of divisions represents the number of
     elements in a row (and later it will represent the number of eigenvalues
@@ -254,16 +253,16 @@ def folding_fast(time, dt, T, num_div):
 
     Parameters
     ----------
-    time : `~numpy.ndarray`
-        One dimensional time array with certain hidden periodicity, e.g.
+    times : `~numpy.ndarray`
+        One dimensional times array with certain hidden periodicity, e.g.
         pulsar period.
     dt : `float`
-        time bin.
+        times bin.
     T : `float`
-        Period used to compute the waterfall matrix, :math:`N \\times M`. ``N``
-        is strictly dependent on the period and the time bin used.
+        Period used to compute the waterfall matrix, :math:`N \\timess M`. ``N``
+        is strictly dependent on the period and the times bin used.
     num_div : `int`
-        Number of divisions made to the time array, which corresponds to the
+        Number of divisions made to the times array, which corresponds to the
         number of elements in a row of the waterfall matrix.
 
     Returns
@@ -272,23 +271,23 @@ def folding_fast(time, dt, T, num_div):
         Remainder of the folding, ready to use in the `~pypcaf.light_curve`
         light-curve.
     waterfall : `~numpy.ndarray`
-        :math:`N \\times M`. ``N`` matrix (two dimensional array). The
+        :math:`N \\timess M`. ``N`` matrix (two dimensional array). The
         waterfall matrix depends on the four inputs from the `~pypfac.folding`
-        function. i.e. ``time``, ``dt``, ``T``, ``num_div``.
+        function. i.e. ``times``, ``dt``, ``T``, ``num_div``.
     """
 
     if T < dt:
-        raise TypeError('Period (T) cannot be smaller than time bin (dt)')
+        raise TypeError('Period (T) cannot be smaller than times bin (dt)')
 
     # Light-curve needs to have a division with no modulus
     M = num_div        # M for ease of notation
     N = round(T / dt)  # It will only select the integer value
 
     # number of samples that will be considered for each row of the waterfall
-    ns = time.size // M
+    ns = times.size // M
 
     # Modulus from division, it returns an element-wise remainder
-    remainder = time % T
+    remainder = times % T
 
     w = np.apply_along_axis(
         func1d=histogram1d,
@@ -316,7 +315,7 @@ def pca_signal(EVec, waterfall):
     K : `~numpy.ndarray`
         Signal matrix, one of the outputs from the PCA analysis. It is
         currently not been used in the `pypcaf` main core. It represents the
-        transposed ``EVec_sorted`` times the normalized waterfall matrix.
+        transposed ``EVec_sorted`` timess the normalized waterfall matrix.
     """
 
     M = waterfall.shape[0]
@@ -335,7 +334,7 @@ def pca_signal(EVec, waterfall):
 def pca(waterfall):
     """
     It returns the eigenvalues and eigenvectors (PCA) from the covariance
-    matrix of a normalized waterfall array of length, math:`N\\time M`.
+    matrix of a normalized waterfall array of length, math:`N\\times M`.
     math:`M` represents the number of eigenvalues and eigenvectors.
 
     Parameters
@@ -384,7 +383,7 @@ def pca(waterfall):
 
 
 def find_period(
-    time, dt, T_init, iteration, delta, num_div, merit_func,
+    times, dt, T_init, iteration, delta, num_div, merit_func,
     region_order
         ):
     """
@@ -395,11 +394,11 @@ def find_period(
 
     Parameters
     ----------
-    time : `~numpy.ndarray`
-        One dimensional time array with certain hidden periodicity, e.g.
+    times : `~numpy.ndarray`
+        One dimensional times array with certain hidden periodicity, e.g.
         pulsar period.
     dt : `float`
-        time bin.
+        times bin.
     T_init : `float`
         Initial period to start looking for a best estimate, ``T_est``.
     iteration : `int`
@@ -409,7 +408,7 @@ def find_period(
         Increase of the period in each iteration. The recommended order of it
         is between ``1e-7`` and ``1e-8``.
     num_div : `int`
-        Number of divisions made to the time array, which corresponds to the
+        Number of divisions made to the times array, which corresponds to the
         number of elements in a row of the waterfall matrix.
     merit_func : `function`
         It computes the merit function from eigenvalues and scalar arrays.
@@ -434,7 +433,7 @@ def find_period(
         Set of scalars of math:`N` length, i.e. the number of
         iterations, ``iteration``. The scalar value is the projection of each
         for the eigenvectors into the hyper-diagonal unitary vector. In other
-        words, the dot product of the (absolute value) eigenvector times the
+        words, the dot product of the (absolute value) eigenvector timess the
         same dimension unitary vector. Sw[:, 0] represents all iteration for
         the first eigenvector.
     merit : `~numpy.ndarray`
@@ -447,31 +446,33 @@ def find_period(
     """
 
     M = num_div
-    T_iterated = T_init - iteration // 2 * delta
+    # iters = np.linspace(0, iteration, iteration, endpoint=False, dtype=int)
+    # T_iteration = (iters - np.mean(iters, dtype=int)) * delta
+    T_iteration = np.linspace(
+        start=T_init - delta * iteration / 2,
+        stop=T_init + delta * iteration / 2,
+        num=iteration,
+        endpoint=False,
+        dtype=times.dtype
+        )
 
-    # N = round(T_iterated / dt)
-
-    eigenvalues = []
-    scalar = []
+    EValw = np.zeros((iteration, M), dtype=T_iteration.dtype)
+    Sw = np.zeros_like(EValw)
     u = np.ones((M, 1)) / np.sqrt(M)  # hyper-diagonal unitary vector
 
-    for i in range(iteration):
+    for t, T_iterated in enumerate(T_iteration):
         # Computing a new waterfall for every iteration
-        # waterfall = folding_fast(time=time, dt=dt, T=T_iterated, num_div=M)[1]
-        waterfall = folding(time=time, dt=dt, T=T_iterated, num_div=M)[1]
+        # waterfall = folding_fast(times=times, dt=dt, T=T_iterated, num_div=M)[1]
+        waterfall = folding(times=times, dt=dt, T=T_iterated, num_div=M)[1]
         EVal, EVec = pca(waterfall=waterfall)
 
         # Storing data for each iteration
-        scalar.append(np.sum(EVec * u, axis=0))
-        eigenvalues.append(EVal)
-
-        T_iterated += delta
+        Sw[t, :] = np.abs((EVec * u).sum(axis=0))
+        EValw[t, :] = EVal
 
     # scalar and eigenvalues from waterfall N x M matrix
     # Sw[:, 0] all iterations for the first scalar
-    Sw = np.abs(scalar)
     # EValw[:, 0] all iterations for the first eigenvalue
-    EValw = np.array(eigenvalues)
 
     # Future development decouple the period calculation
     # using an independent function that calls the merit func
@@ -480,96 +481,7 @@ def find_period(
     if region_order > 1:
         idx_max = flat_region_finder(X=merit, n=region_order)
     else:
-        idx_max = np.argmax(merit)
-
-    T_est = T_init - iteration / 2 * delta + idx_max * delta
+        idx_max = merit.argmax()
+    T_est = T_iteration[idx_max]
 
     return T_est, EValw, Sw, merit, idx_max
-
-
-def find_period2(
-    time, dt, T_init, num_div, iterations, deltas, merit_func,
-    region_order
-        ):
-    """
-    Wrapper function for `~pypcaf.find_period`. It computes two loops of the
-    wrapped function, using the first estimated period, ``T_est1``, as initial
-    period for the second iteration.
-
-    Parameters
-    ----------
-    time : `~numpy.ndarray`
-        One dimensional time array with certain hidden periodicity, e.g.
-        pulsar period.
-    dt : `float`
-        time bin.
-    T_init : `float`
-        Initial period to start looking for a best estimate, ``T_est``.
-    iterations : `list`
-        Corresponds to ``[iteration1, iteration2]``.
-    deltas : `float`
-        Corresponds to ``[delta1, delta2]``
-    num_div : `int`
-        Number of divisions made to the time array, which corresponds to the
-        number of elements in a row of the waterfall matrix.
-    merit_func : `function`
-        It computes the merit function from eigenvalues and scalar arrays.
-        Both of them should be a one dimensional array.
-    region_order : `int`
-        It makes use of the `~pypcaf.flat_region_finder` to search for the
-        maximum in the selected merit function. If ``region_order = 1``,
-        it will compute the ordinary maximum of the merit array, i.e.
-        ``np.max(merit)``. This function defines the estimated period in both
-        ``iterations``.
-
-    Returns
-    -------
-    T : `list`
-        Contains the given initial period, ``T_init``, the estimated period in
-        the first loop, ``T_est1`` and the estimated period in the second
-        loop, ``T_est2``.
-    EValwi : `~numpy.ndarray`
-        Set of eigenvalues of math:`N` length, i.e. the number of
-        iterations, ``iteration``.
-    Swi : `~numpy.ndarray`
-        Set of scalars of math:`N` length, i.e. the number of
-        iterations, ``iteration``. The scalar value is the projection of each
-        for the eigenvectors into the hyper-diagonal unitary vector. In other
-        words, the dot product of the (absolute value) eigenvector times the
-        same dimension unitary vector.
-    meriti : `~numpy.ndarray`
-        Output from the evaluation of ``merit_func``.
-    idxi_max : `int`
-        Position of the maximum value in the merit function (or maximum in a
-        plateau region, depending on ``region_finder``). This index is
-        then used to compute the estimated period from the selected
-        ``iteration``.
-    """
-
-    T_est1, EValw1, Sw1, merit1, idx1_max = find_period(
-        time=time,
-        dt=dt,
-        T_init=T_init,
-        iteration=iterations[0],
-        delta=deltas[0],
-        num_div=num_div,
-        merit_func=merit_func,
-        region_order=region_order
-        )
-
-    # Workaround without np.float the code stops, need to figure this out!
-    T_est2, EValw2, Sw2, merit2, idx2_max = find_period(
-        time=time,
-        dt=dt,
-        T_init=np.float(T_est1),  # TypeError: Error parsing input
-        iteration=iterations[1],
-        delta=deltas[1],
-        num_div=num_div,
-        merit_func=merit_func,
-        region_order=region_order
-        )
-
-    T = [T_init, T_est1, T_est2]
-
-    return T, [EValw1, EValw2], [Sw1, Sw2], [merit1, merit2], [
-        idx1_max, idx2_max]
