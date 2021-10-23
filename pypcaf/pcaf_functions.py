@@ -456,7 +456,7 @@ def find_period(
         dtype=times.dtype
         )
 
-    EValw = np.zeros((iteration, M), dtype=T_iteration.dtype)
+    EValw = np.zeros((iteration, ), dtype=T_iteration.dtype)
     Sw = np.zeros_like(EValw)
     u = np.ones((M, 1)) / np.sqrt(M)  # hyper-diagonal unitary vector
 
