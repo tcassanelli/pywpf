@@ -1,10 +1,12 @@
 #!/bin/bash
+#SBATCH -p debug
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --time=15:00:00
-#SBATCH --job-name PCAF
-#SBATCH --output=/scratch/v/vanderli/cassane/output/mpi_ex_%j.txt
-#SBATCH --mail-type=ALL
+#SBATCH --time=1:00:00
+#SBATCH --job-name PCAF-debug
+#SBATCH --output=/scratch/v/vanderli/cassane/output/pcaf_debug_%j.txt
+#SBATCH --mail-type=FAIL
+
 
 module load texlive
 export MPLCONFIGDIR="$MPLCONFIGDIR:$SCRATCH" 

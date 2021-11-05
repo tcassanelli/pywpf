@@ -4,15 +4,25 @@
 # Author: Tomas Cassanelli
 import os
 os.environ['MPLCONFIGDIR'] = "/project/v/vanderli/cassane/"
+import numpy as np
 import pypcaf
+
+
+# PyPCAF execution
+
+files = [
+    'n0',
+    # 'n25', 'n50', 'n75', 'n100', 'n200', 'n250',
+    # 'n275', 'n300', 'n325'
+    ]
 
 files = ["data_B0531+21.npy", "data_B0540-69.npy", "data_B0833-45.npy"]
 
+M_list = np.linspace(10, 200, 20, dtype=int)
+
 # crab scinet
-M = 200
-base_dir = "/scratch/v/vanderli/cassane"
 pypcaf.pca_folding(
-    times_path=os.path.join(base_dir, "data_B0531+21.npy"),
+    times_path=f'/scratch/v/vanderli/cassane/{files[0]}',
     dt=0.0001,
     T_init=0.03362167003,
     iteration=1000,         # 10 us scanning
@@ -20,10 +30,12 @@ pypcaf.pca_folding(
     num_div=M,
     merit_func=pypcaf.merit1,
     region_order=3,
-    work_dir=base_dir
+    work_dir='/scratch/v/vanderli/cassane/data_crab/'
     )
 
 pypcaf.plot_all(
-    pypcaf_path=os.path.join(base_dir, "pypcaf_out/data_B0531+21-000"),
+    pypcaf_path=(
+        f'/scratch/v/vanderli/cassane/data_crab/pypcaf_out/{_f}-{_s}'
+        ),
     T_ref=0.03362167003
     )
