@@ -5,9 +5,8 @@
 import os
 import time as TIME
 import numpy as np
-from astropy.io import ascii
 from astropy.table import Table
-from .pcaf_functions import find_period, CP_value
+from .pcaf_functions import find_period, cp_value
 
 __all__ = ['pca_folding']
 
@@ -65,20 +64,18 @@ def pca_folding(
         raise TypeError('num_div has to be equal greater than 3')
 
     num_div = np.array(num_div)
-    print('... Total number of num_div loops: {} ... \n'.format(num_div.size))
+    print(f'... Total number of num_div loops: {num_div.size} ... \n')
 
     base = os.path.basename(times_path)
     name = os.path.splitext(base)[0]
 
-    print('... Extracting period from {} ... \n'.format(base))
+    print(f'... Extracting period from {base} ... \n')
 
     # calling the times array
     if os.path.splitext(base)[1] == '.npy':
         times = np.load(times_path)
     else:
         times = np.genfromtxt(times_path)
-
-    EVALW, SW, MERIT = [], [], []
 
     pypcaf_info = Table(
         names=[
@@ -88,44 +85,6 @@ def pca_folding(
         dtype=['int32', 'float128', 'int32'] + ['float128'] * 3 +
         ['int32'] * 2 + ['float128'] * 4
         )
-
-    # M is the number of divisions
-    i_loops = 1  # loop/iteration counter
-    for i in range(num_div.size):
-
-        # print('... Computing loop {} ...\n'.format(i_loops))
-        i_loops += 1
-
-        T_est, EValw, Sw, merit, idx_max = find_period(
-            times=times,
-            dt=dt,
-            T_init=T_init,
-            num_div=num_div[i],
-            iteration=iteration,
-            delta=delta,
-            merit_func=merit_func,
-            region_order=region_order
-            )
-
-        EVALW.append(EValw)
-        MERIT.append(merit)
-        SW.append(Sw)
-
-        pypcaf_info.add_row([
-            num_div[i], dt, iteration, delta, T_init, T_est, idx_max,
-            region_order, merit.max()
-            ] + [CP_value(merit=merit, idx_max=idx_max)]
-            )
-
-        # Printing in every iteration another row
-        if i == 0:
-            pypcaf_info.pprint(max_width=-1)
-        else:
-            print(pypcaf_info.pformat(max_width=-1)[i + 2])
-
-    # Printing summary
-    # pypcaf_info.pprint(max_lines=-1, max_width=-1)
-    print('\n... Storing data ... \n')
 
     if work_dir is None:
         work_dir = ''
@@ -137,20 +96,43 @@ def pca_folding(
             os.makedirs(dir_name)
             break
 
-    ascii.write(
-        output=os.path.join(dir_name, 'info.dat'),
-        table=pypcaf_info
-        )
+    # M is the number of divisions
+    for m, M in enumerate(num_div):
 
-    for M, idx in zip(num_div, range(num_div.size)):
-        np.savez(
-            os.path.join(dir_name, 'M{}'.format(M)),
-            EVALW=EVALW[idx],
-            MERIT=MERIT[idx],
-            SW=SW[idx]
+        T_est, EValw, Sw, merit, idx_max = find_period(
+            times=times,
+            dt=dt,
+            T_init=T_init,
+            num_div=M,
+            iteration=iteration,
+            delta=delta,
+            merit_func=merit_func,
+            region_order=region_order
             )
 
+        sigma, mean, cp = cp_value(merit=merit, idx_max=idx_max, frac=0.25)
+        pypcaf_info.add_row([
+            M, dt, iteration, delta, T_init, T_est, idx_max,
+            region_order, merit.max(), sigma, mean, cp
+            ])
+
+        # Printing in every iteration another row
+        if m == 0:
+            pypcaf_info.pprint(max_width=-1)
+        else:
+            print(pypcaf_info.pformat(max_width=-1)[m + 2])
+
+        np.savez(
+            os.path.join(dir_name, f'M{M}'),
+            EVALW=EValw,
+            MERIT=merit,
+            SW=Sw
+            )
+
+    # Printing summary
+    # pypcaf_info.pprint(max_lines=-1, max_width=-1)
+    print('\n... Storing data ... \n')
+    pypcaf_info.write(os.path.join(dir_name, 'info.dat'), format='ascii')
+
     final_time = np.round((TIME.time() - start_time) / 60, 2)
-    print(
-        '\n **** PyPCAF Completed at {} mins **** \n'.format(final_time)
-        )
+    print(f'\n **** PyPCAF Completed at {final_time} mins **** \n')

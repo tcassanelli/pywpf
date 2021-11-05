@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib import colors
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.gridspec as gridspec
-from astropy.io import ascii
+from astropy.table import Table
 from scipy.constants import golden
 from .pcaf_functions import flat_region_finder
 
@@ -81,7 +81,7 @@ def plot_average_merit(pypcaf_path, T_ref=None):
     """Plot the average of a list of num_div elements"""
 
     pypcaf_info = os.path.join(pypcaf_path, 'info.dat')
-    info = ascii.read(pypcaf_info)
+    info = Table.read(pypcaf_info, format='ascii')
 
     # Change in the future, all of the merits have same time sample
     time_x = np.linspace(
@@ -163,7 +163,7 @@ def plot_all_merit(pypcaf_path, T_ref=None):
     pypcaf.
     """
     pypcaf_info = os.path.join(pypcaf_path, 'info.dat')
-    info = ascii.read(pypcaf_info)
+    info = Table.read(pypcaf_info, format='ascii')
     Ms = info['num_div']
 
     time_x = np.linspace(
@@ -266,7 +266,7 @@ def plot_all_eigenvalue(pypcaf_path, num_div, T_ref=None):
 
     pypcaf_info = os.path.join(pypcaf_path, 'info.dat')
     pypcaf_out = os.path.join(pypcaf_path, 'M{}.npz'.format(num_div))
-    info = ascii.read(pypcaf_info)
+    info = Table.read(pypcaf_info, format='ascii')
 
     # index relative to the num_div
     idx = np.where(info['num_div'] == num_div)[0][0]
@@ -375,7 +375,7 @@ def plot_all_scalar(pypcaf_path, num_div, T_ref=None):
 
     pypcaf_info = os.path.join(pypcaf_path, 'info.dat')
     pypcaf_out = os.path.join(pypcaf_path, 'M{}.npz'.format(num_div))
-    info = ascii.read(pypcaf_info)
+    info = Table.read(pypcaf_info, format='ascii')
 
     # index relative to the num_div
     idx = np.where(info['num_div'] == num_div)[0][0]
@@ -479,7 +479,7 @@ def plot_period_single(pypcaf_path, num_div, T_ref=None, merit_func=None):
     pypcaf_out = os.path.join(
         pypcaf_path, 'M{}.npz'.format(num_div)
         )
-    info = ascii.read(pypcaf_info)
+    info = Table.read(pypcaf_info, format='ascii')
 
     # index relative to the num_div
     idx = np.where(info['num_div'] == num_div)[0][0]
@@ -616,7 +616,7 @@ def plot_period_double(pypcaf_path, num_div, T_ref=None):
     pypcaf_out = os.path.join(
         pypcaf_path, 'M{}.npz'.format(num_div)
         )
-    info = ascii.read(pypcaf_info)
+    info = Table.read(pypcaf_info, format='ascii')
 
     # index relative to the num_div
     idx = np.where(info['num_div'] == num_div)[0][0]
@@ -752,7 +752,7 @@ def plot_period_double(pypcaf_path, num_div, T_ref=None):
 def plot_all(pypcaf_path, T_ref=None):
 
     pypcaf_info = os.path.join(pypcaf_path, 'info.dat')
-    info = ascii.read(pypcaf_info)
+    info = Table.read(pypcaf_info, format='ascii')
     num_div = info['num_div']
 
     name = os.path.split(pypcaf_path)[1]

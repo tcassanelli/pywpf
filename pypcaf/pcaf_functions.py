@@ -8,7 +8,7 @@ from fast_histogram import histogram1d
 
 __all__ = [
     'nextpow2', 'flat_region_finder', 'pre_analysis', 'folding',
-    'folding_fast', 'pca', 'find_period', 'CP_value', 'rms_value'
+    'folding_fast', 'pca', 'find_period', 'cp_value', 'rms_value'
     ]
 
 
@@ -99,13 +99,13 @@ def pre_analysis(times, dt, T_init):
 
     # counts the number of values in the times array that are within each
     # specified bin range, times_x
-    data_bin = np.histogram(times, bins=times_x)[0]
+    hist = np.histogram(times, bins=times_x)[0]
 
     f_step = 1 / dt  # frequency step
-    NFFT = 2 ** nextpow2(data_bin.size)  # length of the transform
+    NFFT = 2 ** nextpow2(hist.size)  # length of the transform
     # power of two for ease of calculation
 
-    freq_raw = np.fft.fft(a=data_bin, n=NFFT)     # Computed FFT
+    freq_raw = np.fft.fft(a=hist, n=NFFT)     # Computed FFT
     freq_abs = np.abs(freq_raw[:NFFT // 2 + 1])   # Erasing mirror effect
     freq_axis = f_step / 2 * np.linspace(0, 1, NFFT // 2 + 1)
 
@@ -137,7 +137,7 @@ def rms_value(X):
     return np.sqrt(X.dot(X) / X.size)
 
 
-def CP_value(merit, idx_max, frac=0.25):
+def cp_value(merit, idx_max, frac=0.25):
     """
     Global value signal-to-noise, named Confidence Paramerter (PC). Quantifies
     the goodness fo a merit function after the PCA-Folding has been executed.
@@ -162,7 +162,7 @@ def CP_value(merit, idx_max, frac=0.25):
     -------
     sigma : `float`
     mean : `float`
-    CP : `float`
+    cp : `float`
     """
 
     region = merit.size * frac
@@ -180,9 +180,9 @@ def CP_value(merit, idx_max, frac=0.25):
     sigma = np.std(X)
     mean = np.average(X)
 
-    CP = (merit.max() - mean) / sigma
+    cp = (merit.max() - mean) / sigma
 
-    return [sigma, mean, CP]
+    return sigma, mean, cp
 
 
 def folding(times, dt, T, num_div):
@@ -289,15 +289,24 @@ def folding_fast(times, dt, T, num_div):
     # Modulus from division, it returns an element-wise remainder
     remainder = times % T
 
-    w = np.apply_along_axis(
-        func1d=histogram1d,
-        axis=1,
-        arr=remainder[:M * ns].reshape(M, ns),
-        bins=N,
-        range=[0, T]
-        )
+    def hist(a, bins):
+        return np.histogram(a=a, bins=bins)[0]
 
-    waterfall = np.concatenate(w, axis=0).reshape(M, N)
+    if times.dtype == np.float64 or times.dtype == np.dtype('<f8'):
+        waterfall = np.apply_along_axis(
+            func1d=histogram1d,
+            axis=1,
+            arr=remainder[:M * ns].reshape(M, ns),
+            bins=N,
+            range=[0, T]
+            )
+    else:
+        waterfall = np.apply_along_axis(
+            func1d=hist,
+            axis=1,
+            arr=remainder[:M * ns].reshape(M, ns),
+            bins=np.linspace(0, T, N + 1)
+            )
 
     return remainder, waterfall
 
@@ -456,19 +465,16 @@ def find_period(
         dtype=times.dtype
         )
 
-    EValw = np.zeros((iteration, ), dtype=T_iteration.dtype)
+    EValw = np.zeros((iteration, M), dtype=T_iteration.dtype)
     Sw = np.zeros_like(EValw)
     u = np.ones((M, 1)) / np.sqrt(M)  # hyper-diagonal unitary vector
 
     for t, T_iterated in enumerate(T_iteration):
         # Computing a new waterfall for every iteration
-        # waterfall = folding_fast(times=times, dt=dt, T=T_iterated, num_div=M)[1]
-        waterfall = folding(times=times, dt=dt, T=T_iterated, num_div=M)[1]
-        EVal, EVec = pca(waterfall=waterfall)
-
-        # Storing data for each iteration
+        waterfall = folding_fast(times=times, dt=dt, T=T_iterated, num_div=M)[1]
+        # waterfall = folding(times=times, dt=dt, T=T_iterated, num_div=M)[1]
+        EValw[t, :], EVec = pca(waterfall=waterfall)
         Sw[t, :] = np.abs((EVec * u).sum(axis=0))
-        EValw[t, :] = EVal
 
     # scalar and eigenvalues from waterfall N x M matrix
     # Sw[:, 0] all iterations for the first scalar
