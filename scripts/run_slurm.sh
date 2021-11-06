@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --time=12:00:00
+#SBATCH --time=06:00:00
 #SBATCH --job-name PCAF
-#SBATCH --output=/scratch/v/vanderli/cassane/output/mpi_ex_%j.txt
+#SBATCH --output=/scratch/v/vanderli/cassane/output/pcaf_ex_%j.txt
 #SBATCH --mail-type=ALL
 
 module load texlive
