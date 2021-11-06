@@ -15,7 +15,7 @@ n_list = ["0", "25", "50", "75", "100", "200", "250", "275", "300", "325"]
 for k, n in enumerate(n_list):
 
     pypcaf.pca_folding(
-        times_path=os.path.join(base_dir, f"data_{n}.npy"),
+        times_path=os.path.join(base_dir, f"n{n}.npy"),
         dt=0.002793,
         T_init=0.089367,
         iteration=1000,         # 10 us scanning
@@ -27,7 +27,7 @@ for k, n in enumerate(n_list):
         )
 
     pypcaf.plot_all(
-        pypcaf_path=os.path.join(base_dir, f"pypcaf_out/data_{n}-000"),
+        pypcaf_path=os.path.join(base_dir, f"pypcaf_out/n{n}-000"),
         T_ref=0.089367
         )
 
