@@ -13,7 +13,8 @@ export MPLCONFIGDIR="$MPLCONFIGDIR:$SCRATCH"
 cd $SCRATCH
 
 # INPUT 
-file="pypcaf_run.py"
+# file="pypcaf_run.py"
+file="pypcaf_run_sim.py"
 
 directory="/home/v/vanderli/cassane/PCA-Folding/scripts/"
 path2file=$directory$file
