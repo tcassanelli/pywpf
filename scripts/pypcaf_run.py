@@ -9,7 +9,7 @@ import pypcaf
 files = ["data_B0531+21.npy", "data_B0540-69.npy", "data_B0833-45.npy"]
 
 # crab scinet
-M = [200]
+M = [2000]
 base_dir = "/scratch/v/vanderli/cassane"
 pypcaf.pca_folding(
     times_path=os.path.join(base_dir, "data_B0531+21.npy"),
@@ -27,3 +27,5 @@ pypcaf.plot_all(
     pypcaf_path=os.path.join(base_dir, "pypcaf_out/data_B0531+21-000"),
     T_ref=0.03362167003
     )
+
+
