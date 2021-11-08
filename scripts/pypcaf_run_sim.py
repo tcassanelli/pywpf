@@ -15,7 +15,8 @@ n_list = [
     # "0", "25", "50",
     # "100", "200", "250",
     # "100", "275",
-    "300", "325"
+    # "300",
+    "325"
     ]
 
 for k, n in enumerate(n_list):
@@ -32,10 +33,10 @@ for k, n in enumerate(n_list):
         work_dir=base_dir
         )
 
-    pypcaf.plot_all(
-        pypcaf_path=os.path.join(base_dir, f"pypcaf_out/n{n}-000"),
-        T_ref=0.089367
-        )
+    # pypcaf.plot_all(
+    #     pypcaf_path=os.path.join(base_dir, f"pypcaf_out/n{n}-000"),
+    #     T_ref=0.089367
+    #     )
 
 
 
