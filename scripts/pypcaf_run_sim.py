@@ -46,7 +46,7 @@ for m, M in enumerate(M_per_rank[rank]):
             T_init=0.089367,
             iteration=1000,         # 10 us scanning
             delta=1e-8,             # 10 ns step
-            num_div=M,
+            num_div=[M],
             merit_func=pypcaf.merit1,
             region_order=3,
             work_dir=base_dir
