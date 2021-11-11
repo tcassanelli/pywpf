@@ -10,14 +10,19 @@ import pypcaf
 base_dir = "/scratch/v/vanderli/cassane/data_B0833-45"
 
 # M = np.arange(3, 21, 1, dtype=int)
-M = [3, 4, 8, 10, 15]
+# M = [3, 4, 8, 10, 15]
+# M = [5, 6, 7, 9, 11, 12, 13, 14, 16, 17, 18, 19, 20]  # 100, 300, 325
+M = [16, 17, 18, 19, 20]  # 200
+
 n_list = [
-    # "0", "25", "50",
-    # "100", "200", "250",
-    # "100", "275",
-    # "300",
-    # "325"
-    "200"
+    # "0",
+    # "25",
+    # "50",
+    # "100",  #
+    "200",  #
+    # "275",
+    # "300",  #
+    # "325"   #
     ]
 
 for k, n in enumerate(n_list):
@@ -38,7 +43,5 @@ for k, n in enumerate(n_list):
     #     pypcaf_path=os.path.join(base_dir, f"pypcaf_out/n{n}-000"),
     #     T_ref=0.089367
     #     )
-
-
 
 
