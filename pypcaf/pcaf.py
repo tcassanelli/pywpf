@@ -93,7 +93,7 @@ def pca_folding(
     for j in ["%03d" % i for i in range(101)]:
         dir_name = os.path.join(work_dir, 'pypcaf_out', name + '-' + str(j))
         if not os.path.exists(dir_name):
-            os.makedirs(dir_name)
+            os.makedirs(dir_name, exist_ok=True)
             break
 
     # M is the number of divisions
