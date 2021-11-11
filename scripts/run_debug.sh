@@ -1,13 +1,14 @@
 #!/bin/bash
 #SBATCH -p debug
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
+#SBATCH --ntasks-per-node=4
 #SBATCH --time=1:00:00
 #SBATCH --job-name PCAF-debug
 #SBATCH --output=/scratch/v/vanderli/cassane/output/pcaf_debug_%j.txt
 #SBATCH --mail-type=FAIL
 
-
+module load gcc/8.3.0
+module load openmpi/3.1.3
 module load texlive
 export MPLCONFIGDIR="$MPLCONFIGDIR:$SCRATCH" 
 cd $SCRATCH
@@ -22,4 +23,4 @@ path2file=$directory$file
 # python environment
 APY3="/home/v/vanderli/cassane/anaconda3/bin/python"
 
-$APY3 $path2file
+mpirun -np 4 $APY3 $path2file
