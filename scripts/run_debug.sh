@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -p debug
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=4
+#SBATCH --ntasks-per-node=13
 #SBATCH --time=1:00:00
 #SBATCH --job-name PCAF-debug
 #SBATCH --output=/scratch/v/vanderli/cassane/output/pcaf_debug_%j.txt
@@ -23,4 +23,4 @@ path2file=$directory$file
 # python environment
 APY3="/home/v/vanderli/cassane/anaconda3/bin/python"
 
-mpirun -np 4 $APY3 $path2file
+mpirun -np 13 $APY3 $path2file
