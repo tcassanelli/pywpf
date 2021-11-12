@@ -15,22 +15,19 @@ comm = MPI.COMM_WORLD
 size = comm.Get_size()
 rank = comm.Get_rank()
 
-base_dir = "/scratch/v/vanderli/cassane/data_B0833-45"
+base_dir = "/scratch/v/vanderli/cassane/data_B0833-45_2"
 
-# M = np.arange(3, 21, 1, dtype=int)
-# M = [3, 4, 8, 10, 15]
-# M_list = [5, 6, 7, 9, 11, 12, 13, 14, 16, 17, 18, 19, 20]  # 100, 300, 325
-M_list = [16, 17, 18, 19, 20]  # 200
+M_list = np.arange(3, 21, 1, dtype=int)
 
 n_list = [
-    # "0",
-    # "25",
-    # "50",
-    # "100",
+    "0",
+    "25",
+    "50",
+    "100",
     "200",
-    # "275",
-    # "300",
-    # "325"   #
+    "275",
+    "300",
+    "325"
     ]
 
 M_per_rank = np.array_split(M_list, size)
