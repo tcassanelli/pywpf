@@ -14,7 +14,7 @@ cd $SCRATCH
 
 # INPUT 
 # file="pypcaf_run.py"
-file="pypcaf_run_sim.py"
+file="pywpf_run_sim.py"
 
 directory="/home/v/vanderli/cassane/PCA-Folding/scripts/"
 path2file=$directory$file

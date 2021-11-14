@@ -1,7 +1,7 @@
 
 # PLOTS
-include pypcaf/pypcaf_sty.mplstyle
+include pywpf/pywpf_sty.mplstyle
 
 # TESTS
-include pypcaf/tests/data/*.npz
-include pypcaf/tests/data/*.npy
+include pywpf/tests/data/*.npz
+include pywpf/tests/data/*.npy

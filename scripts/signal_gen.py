@@ -1,4 +1,4 @@
-
+import os
 import numpy as np
 
 # generating plain and simple signal, but how? things you need to consider:
@@ -8,22 +8,22 @@ import numpy as np
 # how many pulses shoud I introduce in this signal, same as the vela pulse?
 
 
-def noise_to_signal(old_signal, level):
+def noise_to_signal(original_signal, level):
     """
     level is how many data points of noise will be added to the signal
-    old_signal is basically the time array.
+    original_signal is basically the time array.
     """
 
-    x_size = int(old_signal.size * level)
+    x_size = int(original_signal.size * level)
 
     X = np.random.random_sample(x_size)
 
-    ti = old_signal[0]
-    tf = old_signal[-1]
+    ti = original_signal[0]
+    tf = original_signal[-1]
 
     time_noise = X * (tf - ti) + ti
 
-    new_signal = np.hstack((old_signal, time_noise))
+    new_signal = np.hstack((original_signal, time_noise))
 
     new_signal_sorted = np.sort(new_signal)
 
@@ -33,16 +33,15 @@ def noise_to_signal(old_signal, level):
 if __name__ == '__main__':
 
     # Now generating the data files
-    data = np.load('../../data_pulsar/n0.npy')
+    # 5550238 original size from Enrico
+    data = np.load('../../data_B0833-45/data_B0833-45.npy')[:5550238]
 
-    # for l in np.arange(0, 1.05, 0.05):
-
-    #     noise_data = noise_to_signal(old_signal=data, level=l)
-
-    #     np.save(
-    #         file='n' + str(int(l * 100)),
-    #         arr=noise_data
-    #         )
-
-noise_data = noise_to_signal(old_signal=data, level=2.75)
-np.save('n275', noise_data)
+    level_list = np.array([0, 25, 50, 75, 100, 200, 250, 275, 300, 325]) / 100
+    for k, level in enumerate(level_list):
+        noise_data = noise_to_signal(original_signal=data, level=level)
+        np.save(
+            file=os.path.join("../../data_B0833-45", f"n{int(level * 100)}"),
+            arr=noise_data
+            )
+        del(noise_data)
+        print(f'{k} data set completed')

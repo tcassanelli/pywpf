@@ -5,11 +5,11 @@
 from setuptools import setup
 
 setup(
-    name='pypcaf',
+    name='pywpf',
     version='0.1',
-    description='pypcaf - PCA-Folding',
+    description='PyWPF - Waterfall-PCA folding',
     author='Tomas Cassanelli',
-    author_email='tcassanelli@gmail.com',
+    author_email='tcassanelli@protonmail.com',
     install_requires=[
         'setuptools',
         'numpy>=1.8',
@@ -22,13 +22,13 @@ setup(
     setup_requires=['pytest-runner'],  # Enables tests
     tests_require=['pytest'],
     # ext_modules=extensions,
-    packages=['pypcaf'],
+    packages=['pywpf'],
     package_dir={
-        'pypcaf': 'pypcaf',
+        'pywpf': 'pywpf',
         # 'pyoof.submodule': 'pypcaf/submodel',
         },
     include_package_data=True,
     long_description='''
-    PyPCAF - Principal Componen Analysis (PCA) Folding.
+    PyWPF - Waterfall-PCA folding
     '''
     )

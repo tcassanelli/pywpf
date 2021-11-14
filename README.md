@@ -1,3 +1,3 @@
-# PyPCAF
+# PyWPF
 
-Principal Component Analysis (PCA) and Folding period algorithm.
+Waterfall Principal Component Analysis (PCA) Folding.
