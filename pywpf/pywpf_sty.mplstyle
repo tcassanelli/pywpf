@@ -1,0 +1,52 @@
+# Setting for PyWPF.
+# Author: Tomas Cassanelli
+# Last update: 28.01.2018
+
+# Look here how to add more style!
+# https://github.com/matplotlib/matplotlib/blob/master/matplotlibrc.template
+
+
+# LINES
+lines.linewidth     : 0.6
+lines.markersize    : 2
+
+# TEXT
+text.usetex         : True
+mathtext.fontset    : stix
+
+# FONT
+font.family         : serif
+font.serif          : DejaVu Serif
+font.size           : 7
+
+# AXES
+axes.labelsize      : 7
+axes.linewidth      : 0.3
+axes.titlesize      : 8
+axes.grid           : True
+axes.prop_cycle     : cycler('color', ['1f2db4', 'b41f2d', '1fb4a6', 'b4a61f'])
+
+# TICKS
+xtick.labelsize     : 7
+ytick.labelsize     : 7
+
+# IMAGES
+image.cmap          : viridis
+image.origin        : lower
+
+# GRIDS
+grid.linestyle      : --
+grid.alpha          : 0.6
+grid.linewidth      : 0.2
+grid.color          : b0b0b0
+
+# FIGURE
+figure.titlesize    : 7
+
+# LEGEND
+legend.fontsize     : 6
+legend.fancybox     : False
+legend.borderpad    : 0.4
+legend.framealpha   : 1
+legend.edgecolor    : 0.9
+
