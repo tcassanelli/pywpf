@@ -1,6 +1,6 @@
 
 # PLOTS
-include pywpf/pywpf_sty.mplstyle
+include pywpf/data/pywpf_sty.mplstyle
 
 # TESTS
 include pywpf/tests/data/*.npz

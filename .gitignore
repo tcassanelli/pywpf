@@ -10,6 +10,7 @@ pypcaf.egg-info/
 
 # Notebooks
 .ipynb_checkpoints
+notebooks/
 
 # Scripts
 scripts/pypcaf_out/*

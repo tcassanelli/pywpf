@@ -22,7 +22,7 @@ __all__ = [
 # Plot style added from relative path
 try:
     plotstyle_dir = os.path.dirname(__file__)
-    plt.style.use(os.path.join(plotstyle_dir, 'pywpf_sty.mplstyle'))
+    plt.style.use(os.path.join(plotstyle_dir, 'data', 'pywpf_sty.mplstyle'))
 except OSError:
     print("Default plotting configuration could not be installed.")
 
