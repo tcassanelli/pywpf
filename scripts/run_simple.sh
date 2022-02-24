@@ -17,7 +17,7 @@ cd $SCRATCH
 # file="pypcaf_run.py"
 file="folding_M.py"
 
-directory="/home/v/vanderli/cassane/PCA-Folding/scripts/"
+directory="/home/v/vanderli/cassane/pywpf/scripts/"
 path2file=$directory$file
 
 # python environment
