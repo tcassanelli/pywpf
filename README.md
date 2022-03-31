@@ -69,7 +69,7 @@ In the [scripts/](https://github.com/tcassanelli/pywpf/tree/main/scripts) direct
 
 ## License
 
-PyWPF is licensed under a 3-clause BSD style license - see the [LICENSE](https://github.com/tcassanelli/pywpf/blob/main/README.md) for more information.
+PyWPF is licensed under a 3-clause BSD style license - see the [LICENSE](https://github.com/tcassanelli/pywpf/blob/main/LICENSE.md) for more information.
 
 ## TODOs
 
