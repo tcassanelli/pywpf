@@ -16,7 +16,7 @@ python3 data2npy.py -i pathto/20091215-031945UTC_crab-NTT.baricentrizzato.tempo2
 python3 b0531+21.py -i pathto/20091215-031945UTC_crab-NTT.baricentrizzato.tempo2.npy
 ```
 
-Then the data outputs will be a figure and the computed data sets from `pywpca`, in the `pywpf_out/` directory (`cd pathto/`).
+Then the data outputs will be a figure and the computed data sets from `pywpf`, in the `pywpf_out/` directory (`cd pathto/`).
 
 ```bash
 ├── pywpf_out
