@@ -6,6 +6,7 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 import matplotlib.pyplot as plt
+import argparse
 import pywpf
 
 """
@@ -13,14 +14,24 @@ Simple script to run PyWPF on Crab pulsar data.
 The script will run and generate the output data in the working directory.
 """
 
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--path-input", "-i",
+    help="path to file",
+    type=str,
+    )
+args = parser.parse_args()
+times_path = args.path_input
+
 # B0531+21
 dt = 0.0001
 T_init = 0.0336372543236884
-iteration = 10000
+iteration = 50
 delta = 1e-9
 
-base_dir = "/my/work/dir"
-times_path = os.path.join(base_dir, "data_B0531+21.npy")
+work_dir = os.path.dirname(times_path)
+basename = os.path.basename(times_path)
+name = os.path.splitext(basename)[0]
 
 M = 200
 pywpf.pca_folding(
@@ -32,14 +43,14 @@ pywpf.pca_folding(
     num_div=[M],
     merit_func=pywpf.merit1,
     region_order=3,
-    work_dir=base_dir
+    work_dir=work_dir
     )
 
 # beyond this point we take data and plot it
 n_counts = np.load(times_path).size
-pywpf_path = os.path.join(base_dir, "pywpf_out")
-data = np.load(os.path.join(pywpf_path, "data_B0531+21-000", f"M{M}.npz"))
-pywpf_info = os.path.join(pywpf_path, "data_B0531+21-000", 'info.dat')
+pywpf_path = os.path.join(work_dir, "pywpf_out")
+data = np.load(os.path.join(pywpf_path, f"{name}-000", f"M{M}.npz"))
+pywpf_info = os.path.join(pywpf_path, f"{name}-000", 'info.dat')
 info = Table.read(pywpf_info, format="ascii")
 
 # Change in the future, all of the merits have same time sample
@@ -79,4 +90,4 @@ ax.set_xlabel(
     )
 ax.set_ylabel("Eigenvalue, scalar and merit function")
 fig.tight_layout()
-fig.savefig(os.path.join(pywpf_path, "b0531+21_run.pdf"))
+fig.savefig(os.path.join(pywpf_path, f"{name}_run.pdf"))
